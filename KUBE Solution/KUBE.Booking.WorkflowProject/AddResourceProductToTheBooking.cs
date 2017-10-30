@@ -1,0 +1,111 @@
+﻿using System;
+using System.Activities;
+using System.ServiceModel;
+using Microsoft.Xrm.Sdk;
+using System.Linq;
+using System.Linq.Expressions;
+using Microsoft.Xrm.Sdk.Workflow;
+using Microsoft.Xrm.Sdk.Query;
+using KUBE.Booking.WorkflowProject.Entities;
+
+namespace KUBE.Booking.WorkflowProjekct
+{
+
+    public sealed class AddResourceProductToTheBooking : CodeActivity
+    {
+
+
+        protected override void Execute(CodeActivityContext executionContext)
+        {
+            // Create the tracing service
+            ITracingService tracingService = executionContext.GetExtension<ITracingService>();
+
+            if (tracingService == null)
+            {
+                throw new InvalidPluginExecutionException("Failed to retrieve tracing service.");
+            }
+
+            tracingService.Trace("Entered AddResourceProductToTheBooking.Execute(), Activity Instance Id: {0}, Workflow Instance Id: {1}",
+                executionContext.ActivityInstanceId,
+                executionContext.WorkflowInstanceId);
+
+            // Create the context
+            IWorkflowContext context = executionContext.GetExtension<IWorkflowContext>();
+
+            if (context == null)
+            {
+                throw new InvalidPluginExecutionException("Failed to retrieve workflow context.");
+            }
+
+            tracingService.Trace("AddResourceProductToTheBooking.Execute(), Correlation Id: {0}, Initiating User: {1}",
+                context.CorrelationId,
+                context.InitiatingUserId);
+
+            IOrganizationServiceFactory serviceFactory = executionContext.GetExtension<IOrganizationServiceFactory>();
+            IOrganizationService service = serviceFactory.CreateOrganizationService(context.UserId);
+
+            Xrm xrm = new Xrm(service);
+
+
+            tracingService.Trace("Creating AddResourceProductToTheBooking...");
+
+            try
+            {
+                var resId = context.PrimaryEntityId;
+                tracingService.Trace("1 - " + resId.ToString());
+
+                var res = xrm.BookableResourceBookingSet.FirstOrDefault(b => b.BookableResourceBookingId.Value == resId);
+                tracingService.Trace("2 - " + res.Name);
+                var booking = xrm.dyna_bookingSet.FirstOrDefault(b => b.ActivityId.Value == res.new_dyna_booking.Id);
+                tracingService.Trace("3 - " + booking.Subject);
+
+                if (res != null)
+                {
+                    tracingService.Trace("4 - has res ");
+                    var eq = xrm.BookableResourceSet.FirstOrDefault(f => f.BookableResourceId.Value == res.Resource.Id);
+
+                    if (eq.dyna_ProductId != null)
+                    {
+                        tracingService.Trace("5 - has product ");
+                        var pro = xrm.ProductSet.FirstOrDefault(p => p.ProductId.Value == eq.dyna_ProductId.Id);
+                        tracingService.Trace("6 - got product ");
+
+                        double antal = 1;
+
+                        if (booking.dyna_bookingtype.Value == 378080003)
+                        {
+                            tracingService.Trace("6.a - dyna_bookingtype ");
+                            antal = 1; //Math.Round(double.Parse((booking.ScheduledDurationMinutes.Value / 60 / 24).ToString("F2")), MidpointRounding.AwayFromZero);
+                        }
+
+                        tracingService.Trace("7 - adding dyna_bookingproductline ");
+                        dyna_bookingproductline bpl = new dyna_bookingproductline();
+                        bpl.dyna_AccommodationTypeId = eq.dyna_AccommodationTypeId;
+                        bpl.dyna_count = int.Parse(antal.ToString());
+                        // bpl.dyna_LokaleType = new OptionSetValue(378080000);
+                        bpl.dyna_price = pro.Price;
+                        bpl.dyna_useprice = pro.Price;
+                        bpl.dyna_productid = pro.ToEntityReference();
+                        bpl.dyna_name = pro.Name;
+                        bpl.dyna_bookingid = booking.dyna_parentbookingid != null ? booking.dyna_parentbookingid : booking.ToEntityReference();
+                        tracingService.Trace("8 - finish dyna_bookingproductline ");
+                        service.Create(bpl);
+
+                        
+                    }
+
+                }
+
+                tracingService.Trace("Done.");
+            }
+            catch (FaultException<OrganizationServiceFault> e)
+            {
+                tracingService.Trace("Exception: {0} - {1}", e.ToString(), e.StackTrace);
+                // Handle the exception.
+                throw;
+            }
+
+            tracingService.Trace("Exiting AddResourceProductToTheBooking.Execute(), Correlation Id: {0}", context.CorrelationId);
+        }
+    }
+}
