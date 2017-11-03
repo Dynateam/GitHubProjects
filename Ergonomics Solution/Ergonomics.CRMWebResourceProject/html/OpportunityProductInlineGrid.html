@@ -1,0 +1,488 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <title></title>
+    <link rel="stylesheet" href="/WebResources/dyna_/css/kendo.common.min.css" />
+    <!--<link rel="stylesheet" href="/WebResources/dyna_/css/kendo.common.min.css" />-->
+    <link rel="stylesheet" href="/WebResources/dyna_/css/kendo.bootstrapv4.min.css" />
+    <!--<link rel="stylesheet" href="/WebResources/dyna_/css/kendo.common.min.css" />-->
+    <!--<link rel="stylesheet" href="/WebResources/dyna_/css/kendo.bootstrap.min.css" />-->
+    <!--<link rel="stylesheet" href="/WebResources/dyna_/css/kendo.common.min.css" />-->
+    <!--<link rel="stylesheet" href="css/kendo.default.mobile.min.css" />-->
+
+    <script src="/WebResources/ClientGlobalContext.js.aspx" type="text/javascript"></script>
+    <script src="/WebResources/dyna_/scripts/jquery.min.js"></script>
+    <script src="/WebResources/dyna_/scripts/json2.js"></script>
+    <script src="/WebResources/dyna_/scripts/kendo.all.min.js"></script>
+
+
+    <style>
+        body {
+            font-family: Arial, Helvetica, sans-serif;
+            font-weight: normal;
+            font-size: 12px;
+        }
+
+        #opportunityProductDrop {
+            vertical-align: middle;
+            font-size: 12px;
+        }
+
+        .refreshBtnContainer {
+            display: inline-block;
+        }
+
+        .toolbar {
+            float: right;
+        }
+
+        .k-button {
+            font-size: 12px;
+        }
+
+        .k-input {
+            font-size: 12px;
+        }
+
+        .k-block {
+            font-size: 12px;
+        }
+
+        .k-widget {
+            font-size: 12px;
+        }
+    </style>
+
+    <script>
+        function GetOpportunityProduct() {
+
+            var ctx = GetCrmContext();
+            var serverUrl = location.protocol + "//" + location.host
+
+        }
+
+    </script>
+
+</head>
+<body>
+    <div id="example">
+
+        <script type="text/x-kendo-template" id="template">
+            <div class="refreshBtnContainer">
+                <a role="button" class="k-button k-button-icontext k-grid-save-changes" href="\\#"><span class="k-icon k-i-check"></span>Save changes</a>
+                <a role="button" class="k-button k-button-icontext k-grid-cancel-changes" href="\\#"><span class="k-icon k-i-cancel"></span>Cancel changes</a>
+            </div>
+            <div class="toolbar">
+                <input id="opportunityProductDrop" style="width: 200px" />
+                <a href="\\#" class="k-pager-refresh k-link k-button" title="Refresh"><span class="k-icon k-i-reload"></span></a>
+            </div>
+        </script>
+
+        <div id="grid"></div>
+
+        <script>
+            $(document).ready(function () {
+
+                var opportynityId = "DB91AA08-F7AF-E711-80ED-3863BB347D08";
+
+                var ctx = GetCrmContext();
+                var serverUrl = location.protocol + "//" + location.host;
+
+                var crudServiceBaseUrl = "https://demos.telerik.com/kendo-ui/service";
+
+                var dataSource = new kendo.data.DataSource({
+                    transport: {
+                        read: function (options) {
+                            $.ajax({
+                                type: "GET",
+                                contentType: "application/json; charset=utf-8",
+                                datatype: "json",
+                                url: serverUrl + "/XRMServices/2011/OrganizationData.svc/OpportunityProductSet?$select=BaseAmount,Description,dyna_ExpectedDeliveryDate,dyna_Status,ExtendedAmount,IsPriceOverridden,IsProductOverridden,ManualDiscountAmount,OpportunityId,OpportunityProductId,PricePerUnit,ProductDescription,ProductId,ProductTypeCode,Quantity&$filter=OpportunityId/Id eq (guid'DB91AA08-F7AF-E711-80ED-3863BB347D08')",
+                                beforeSend: function (XMLHttpRequest) {
+                                    XMLHttpRequest.setRequestHeader("Accept", "application/json");
+                                },
+                                async: true,
+                                success: function (data, textStatus, xhr) {
+                                    var results = data.d.results;
+                                    var resultOpp = [];
+                                    for (var i = 0; i < results.length; i++) {
+                                        var dyna_Status = results[i].dyna_Status;
+                                        var baseAmount = results[i].BaseAmount;
+                                        var description = results[i].Description;
+                                        var isPriceOverridden = results[i].IsPriceOverridden;
+                                        var isProductOverridden = results[i].IsProductOverridden;
+                                        var dyna_ExpectedDeliveryDate = results[i].dyna_ExpectedDeliveryDate;
+                                        var extendedAmount = results[i].ExtendedAmount;
+                                        var manualDiscountAmount = results[i].ManualDiscountAmount;
+                                        var opportunityId = results[i].OpportunityId;
+                                        var opportunityProductId = results[i].OpportunityProductId;
+                                        var pricePerUnit = results[i].PricePerUnit;
+                                        var productDescription = results[i].ProductDescription;
+                                        var productId = results[i].ProductId;
+                                        var productTypeCode = results[i].ProductTypeCode;
+                                        var quantity = results[i].Quantity;
+
+                                        var resultItem = {};
+                                        resultItem.baseAmount = baseAmount.Value;
+                                        resultItem.extendedAmount = extendedAmount.Value;
+                                        resultItem.dyna_Status = SetStatusLabel(dyna_Status.Value);
+                                        resultItem.description = description;
+                                        resultItem.isPriceOverridden = isPriceOverridden;
+                                        resultItem.dyna_ExpectedDeliveryDate = dyna_ExpectedDeliveryDate;
+                                        resultItem.isProductOverridden = isProductOverridden;
+                                        resultItem.manualDiscountAmount = manualDiscountAmount.Value;
+                                        resultItem.opportunityId = opportunityId.Id;
+                                        resultItem.opportunityIdName = opportunityId.Name;
+                                        resultItem.opportunityProductId = opportunityProductId;
+                                        resultItem.pricePerUnit = pricePerUnit.Value;
+                                        resultItem.productDescription = productDescription;
+                                        resultItem.productId = productId != null ? productId.Id : null;
+                                        resultItem.productIdName = productId != null ? productId.Name : "";
+                                        resultItem.productTypeCode = productTypeCode != null ? productTypeCode.Value : null;
+                                        resultItem.quantity = quantity;
+
+                                        resultOpp.push(resultItem);
+                                    }
+
+                                    options.success(resultOpp);
+                                },
+                                error: function (xhr, textStatus, errorThrown) {
+                                    Xrm.Utility.alertDialog(textStatus + " " + errorThrown);
+                                }
+                            });
+                        },
+                        update: function (options) {
+                            var item = options.data;
+
+                            var entity = {};
+
+                            if (item.productId != null) {
+                                entity.ProductId = {
+                                    Id: item.productId,
+                                    LogicalName: "product"
+                                };
+                            }
+
+                            entity.Description = item.description != null ? item.description : "";
+                            entity.Quantity = parseFloat(item.quantity).toFixed(0);
+
+                            entity.BaseAmount = {
+                                Value: parseFloat(item.baseAmount).toFixed(2)
+                            };
+                            entity.OpportunityId = {
+                                Id: item.opportunityId,
+                                LogicalName: "opportunity"
+                            };
+                            entity.IsPriceOverridden = item.IsPriceOverridden;
+                            entity.PricePerUnit = {
+                                Value: parseFloat(item.pricePerUnit).toFixed(2)
+                            };
+                            entity.ManualDiscountAmount = {
+                                Value: parseFloat(item.manualDiscountAmount).toFixed(2)
+                            };
+
+                            $.ajax({
+                                type: "POST",
+                                contentType: "application/json; charset=utf-8",
+                                datatype: "json",
+                                url: serverUrl + "/XRMServices/2011/OrganizationData.svc/OpportunityProductSet(guid'" + item.opportunityProductId + "')",
+                                data: JSON.stringify(entity),
+                                beforeSend: function (XMLHttpRequest) {
+                                    XMLHttpRequest.setRequestHeader("Accept", "application/json");
+                                    XMLHttpRequest.setRequestHeader("X-HTTP-Method", "MERGE");
+                                },
+                                async: true,
+                                success: function (data, textStatus, xhr) {
+                                    options.success(item);
+                                },
+                                error: function (xhr, textStatus, errorThrown) {
+                                    Xrm.Utility.alertDialog(textStatus + " " + errorThrown);
+                                }
+                            });
+
+
+                        },
+                        destroy: function (options) {
+                            alert("Delete");
+                        },
+                        create: function (options) {
+
+                            debugger
+                            var item = options.data;
+
+                            var entity = {};
+
+                            if (item.productId != null) {
+                                entity.ProductId = {
+                                    Id: item.productId,
+                                    LogicalName: "product"
+                                };
+                            }
+
+                            entity.UoMId = {
+                                Id: "5F4EFA02-9DEF-4FFA-BC89-E086D690B614",
+                                LogicalName: "uom"
+                            };
+
+                            entity.Description = item.description != null ? item.description : "";
+                            entity.Quantity = parseFloat(item.quantity).toFixed(0);
+                            entity.IsProductOverridden = false; // Existing
+                            entity.IsPriceOverridden = false; //Use default
+
+                            //entity.BaseAmount = {
+                            //    Value: parseFloat(item.baseAmount).toFixed(2)
+                            //};
+                            entity.OpportunityId = {
+                                Id: opportynityId,
+                                LogicalName: "opportunity"
+                            };
+                            entity.IsPriceOverridden = item.IsPriceOverridden;
+                            entity.PricePerUnit = {
+                                Value: parseFloat(item.pricePerUnit).toFixed(2)
+                            };
+                            entity.ManualDiscountAmount = {
+                                Value: parseFloat(item.manualDiscountAmount).toFixed(2)
+                            };
+
+                            $.ajax({
+                                type: "POST",
+                                contentType: "application/json; charset=utf-8",
+                                datatype: "json",
+                                url: serverUrl + "/XRMServices/2011/OrganizationData.svc/OpportunityProductSet",
+                                data: JSON.stringify(entity),
+                                beforeSend: function (XMLHttpRequest) {
+                                    XMLHttpRequest.setRequestHeader("Accept", "application/json");
+                                },
+                                async: true,
+                                success: function (data, textStatus, xhr) {
+                                    var result = data.d;
+                                    var newEntityId = result.OpportunityProductId;
+
+                                    var ddl = $("#opportunityProductDrop").data("kendoDropDownList");
+                                    ddl.value(-1);
+                                    options.success(item);
+                                },
+                                error: function (xhr, textStatus, errorThrown) {
+                                    Xrm.Utility.alertDialog(textStatus + " " + errorThrown);
+                                }
+                            });
+
+                        },
+                        parameterMap: function (options, operation) {
+                            if (operation !== "read" && options.models) {
+                                return { models: kendo.stringify(options.models) };
+                            }
+                        }
+                    },
+                    batch: false,
+                    pageSize: 20,
+                    schema: {
+                        model: {
+                            id: "opportunityProductId",
+                            fields: {
+                                isProductOverridden: { type: "boolean", editable: true, nullable: true },
+                                isPriceOverridden: { type: "boolean", editable: true, nullable: true },
+                                productId: { type: "string" },
+                                productIdName: { editable: true, type: "string" },
+                                description: { editable: false, type: "string" },
+                                pricePerUnit: { type: "number", validation: { required: true, min: 1 } },
+                                quantity: { type: "number", validation: { min: 1, required: true } },
+                                manualDiscountAmount: { type: "number", validation: { required: true, min: 0 } },
+                                extendedAmount: { type: "number", editable: false, validation: { required: true, min: 1 } },
+                                dyna_Status: { type: "string", editable: false },
+                                dyna_ExpectedDeliveryDate: { type: "date", editable: false }
+                            }
+                        }
+                    }
+                });
+
+                var grid = $("#grid").kendoGrid({
+                    dataSource: dataSource,
+                    navigatable: true,
+                    pageable: true,
+                    height: 550,
+                    toolbar: kendo.template($("#template").html()), //["create", "save", "cancel"],
+                    edit: function (e) {
+                        if (e.model.isNew()) {
+                            // Disable the editor of the "id" column when editing data items
+                            debugger
+                            //var numeric = e.container.find("input[name=dyna_ExpectedDeliveryDate]").data("kendoNumericTextBox");
+                            //numeric.enable(true);
+                            if ($("#opportunityProductDrop").val() != 1) {
+                                $(e.container).find('input[name="description"]').attr("readonly", false);
+                            }
+
+                            $(".k-grid-edit-row td")[8].innerText = "";
+                            e.model.dyna_ExpectedDeliveryDate = null;
+                        }
+                    },
+                    columns: [
+                        { template: '<input type="checkbox" #= isPriceOverridden ? \'checked="checked"\' : "" # class="chkbx" />', title: "Price Overriden", width: 110 },
+                        //{ field: "isPriceOverridden", title: "Price Overriden", width: 120, editor: customBoolEditor },
+                        { field: "productIdName", title: "Existing Product", template: '#=productIdName#', editor: customBoolDropDrown, width: 150 },
+                        //{ field: "productIdName", title: "Existing Product", editor: customBoolDropDrown, width: 150 },
+                        { field: "description", title: "Name", width: 150 },
+                        { field: "pricePerUnit", title: "Selling Price", format: "{0:c}", width: 120 },
+                        { field: "quantity", title: "Quantity", width: 120 },
+                        { field: "manualDiscountAmount", title: "Discount Amount", format: "{0:c}", width: 120 },
+                        { field: "extendedAmount", title: "Opportunity Line Amount", format: "{0:c}", width: 120 },
+                        { field: "dyna_Status", title: "Status", width: 120 },
+                        { field: "dyna_ExpectedDeliveryDate", title: "Expected Delivery Date", format: "{0:dd-MM-yyyy}", width: 120 },
+                        { command: "destroy", title: "&nbsp;", width: 150 }
+                    ],
+                    editable: true
+                });
+
+
+                var data = [
+                            { text: "Existing Product", value: "1" },
+                            { text: "Write-in Product", value: "2" }
+                ];
+
+                var dropDown = grid.find("#opportunityProductDrop").kendoDropDownList({
+                    optionLabel: "Add Opportunity Product",
+                    dataTextField: "text",
+                    dataValueField: "value",
+                    dataSource: data,
+                    index: 0,
+                    change: onChange
+                });
+
+                grid.find(".k-grid-toolbar").on("click", ".k-pager-refresh", function (e) {
+                    e.preventDefault();
+                    grid.data("kendoGrid").dataSource.read();
+                });
+            });
+
+            function onChange() {
+                var value = $("#opportunityProductDrop").val();
+                var grid = $("#grid").data("kendoGrid");
+
+                if (value == 1 || value == 2) {
+                grid.addRow();
+            };
+
+            function customBoolEditor(container, options) {
+                var guid = kendo.guid();
+                $('<input class="k-checkbox" id="' + guid + '" type="checkbox" name="isPriceOverridden" data-type="boolean" data-bind="checked:isPriceOverridden">').appendTo(container);
+                $('<label class="k-checkbox-label" for="' + guid + '">&#8203;</label>').appendTo(container);
+            }
+
+            var proId = null
+            function customBoolDropDrown(container, options) {
+
+                var ctx = GetCrmContext();
+                var serverUrl = location.protocol + "//" + location.host;
+                debugger
+                $('<input id="productDrop" data-text-field="productIdName" data-value-field="productId" data-bind="value:productId "/>').appendTo(container)
+                .kendoComboBox({
+                    placeholder: "Select product",
+                    dataTextField: "productIdName",
+                    dataValueField: "productId",
+                    change: function (e) {
+                        debugger
+                        options.model["productIdName"] = e.sender.text();
+                    },
+                    select: onSelectProduct,
+                    //filter: "contains",
+                    //autoBind: false,
+                    //minLength: 3,
+                    dataSource: {
+                        //serverFiltering: true,
+                        transport: {
+                            read: function (option) {
+                                $.ajax({
+                                    type: "GET",
+                                    contentType: "application/json; charset=utf-8",
+                                    datatype: "json",
+                                    url: Xrm.Page.context.getClientUrl() + "/XRMServices/2011/OrganizationData.svc/ProductPriceLevelSet?$select=Amount,PriceLevelId,ProductId,product_price_levels/Name,product_price_levels/ProductId&$expand=product_price_levels&$filter=PriceLevelId/Id eq (guid'3ED0C142-7CFB-E311-A1B8-005056AD7E30')",
+                                    beforeSend: function (XMLHttpRequest) {
+                                        XMLHttpRequest.setRequestHeader("Accept", "application/json");
+                                    },
+                                    success: function (data, textStatus, xhr) {
+                                        var results = data.d.results;
+                                        var resultPro = [];
+
+                                        for (var i = 0; i < results.length; i++) {
+                                            var amount = results[i].Amount;
+                                            var priceLevelId = results[i].PriceLevelId;
+                                            var productId = results[i].ProductId;
+                                            var product_price_levels_Name = results[i].product_price_levels.Name;
+                                            var product_price_levels_ProductId = results[i].product_price_levels.ProductId;
+
+                                            var resultItem = {};
+                                            resultItem.productIdName = productId.Name;
+                                            resultItem.productId = productId.Id;
+                                            resultItem.amount = amount.Value;
+                                            resultPro.push(resultItem);
+                                        }
+
+                                        option.success(resultPro);
+                                    },
+                                    error: function (xhr, textStatus, errorThrown) {
+                                        Xrm.Utility.alertDialog(textStatus + " " + errorThrown);
+                                    }
+                                });
+                            }
+                        }
+                    }
+                });
+            }
+
+            function onChangeProduct(e) {
+                //var value = $(e).val();
+                var grid = $("#grid").data("kendoGrid");
+            };
+
+            function onSelectProduct(e) {
+
+                if (e.item) {
+                    debugger
+                    var dataItem = this.dataItem(e.item.index());
+                    var grid = $("#grid").data("kendoGrid").dataItem(this.element.closest("tr"));
+                    grid.pricePerUnit = dataItem.amount;
+
+                    var d = $("#grid").find("tr[data-uid='" + model.uid + "'] td:eq(3)").text(dataItem.amount);
+
+                    //proId = dataItem.productId;
+
+                    //kendoConsole.log("event :: select (" + dataItem.text + " : " + dataItem.value + ")");
+                } else {
+                    //kendoConsole.log("event :: select");
+                }
+
+
+            };
+
+            function SetStatusLabel(val) {
+                var label = "";
+
+                switch (val) {
+                    case 1: label = "Open"; break;
+                    case 2: label = "Delievered"; break;
+                    case 3: label = "Canceled"; break;
+                    default: label = ""; break;
+
+                }
+
+                return label;
+            }
+
+            function GetCrmContext() {
+                var errorMessage = "Context is not available.";
+                if (typeof GetGlobalContext != "undefined")
+                { return GetGlobalContext(); }
+                else
+                {
+                    if (typeof Xrm != "undefined") {
+                        return Xrm.Page.context;
+                    }
+                    else { throw new Error(errorMessage); }
+                }
+            }
+        </script>
+    </div>
+
+
+</body>
+</html>

@@ -43,6 +43,32 @@
     <Reference Include="System.Core" />
   </ItemGroup>
   <ItemGroup>
+    <Content Include="css\kendo.bootstrap-v4.min.css" />
+    <Content Include="css\kendo.bootstrap.min.css" />
+    <Content Include="css\kendo.common.min.css" />
+    <Content Include="css\kendo.default.min.css" />
+    <Content Include="html\OpportunityProductInlineGrid.html" />
+    <Content Include="images\editor.png" />
+    <Content Include="images\imagebrowser.png" />
+    <Content Include="images\indeterminate.gif" />
+    <Content Include="images\loading-image.gif" />
+    <Content Include="images\loading.gif" />
+    <Content Include="images\loading_2x.gif" />
+    <Content Include="images\markers.png" />
+    <Content Include="images\markers_2x.png" />
+    <Content Include="images\slider-h.gif" />
+    <Content Include="images\slider-v.gif" />
+    <Content Include="images\sprite.png" />
+    <Content Include="images\sprite_2x.png" />
+    <Content Include="images\sprite_kpi.png" />
+    <Content Include="images\sprite_kpi_2x.png" />
+    <Content Include="scripts\jquery.min.js" />
+    <Content Include="scripts\json2.js" />
+    <Content Include="scripts\kendo.all.min.js" />
+    <Content Include="scripts\kendo.aspnetmvc.min.js" />
+    <Content Include="scripts\kendo.color.min.js" />
+    <Content Include="scripts\kendo.grid.min.js" />
+    <Content Include="scripts\productTest.js" />
     <Content Include="Web.config" />
   </ItemGroup>
   <ItemGroup>
@@ -53,11 +79,7 @@
       <DependentUpon>Settings.settings</DependentUpon>
     </Compile>
   </ItemGroup>
-  <ItemGroup>
-    <Folder Include="css\" />
-    <Folder Include="images\" />
-    <Folder Include="scripts\" />
-  </ItemGroup>
+  <ItemGroup />
   <ItemGroup>
     <None Include="Properties\Settings.settings">
       <Generator>SettingsSingleFileGenerator</Generator>
