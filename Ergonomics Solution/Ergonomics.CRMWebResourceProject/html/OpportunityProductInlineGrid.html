@@ -18,15 +18,27 @@
 
     <style>
         body {
-            font-family: Arial, Helvetica, sans-serif;
+            font-family: Segoe UI,Tahoma,Arial;
             font-weight: normal;
-            font-size: 12px;
+            font-size: 11px;
         }
 
-        #opportunityProductDrop {
+        #btnExistProduct {
             vertical-align: middle;
-            font-size: 12px;
+            font-size: 11px;
+            float: left;
         }
+
+        #btnWriteInProduct {
+            vertical-align: middle;
+            font-size: 11px;
+            float: left;
+        }
+
+        /*#opportunityProductDrop {
+            vertical-align: middle;
+            font-size: 11px;
+        }*/
 
         .refreshBtnContainer {
             display: inline-block;
@@ -37,19 +49,27 @@
         }
 
         .k-button {
-            font-size: 12px;
+            font-size: 11px;
+        }
+
+        .k-grid-delete {
+            padding: 0;
         }
 
         .k-input {
-            font-size: 12px;
+            font-size: 11px;
         }
 
         .k-block {
-            font-size: 12px;
+            font-size: 11px;
         }
 
         .k-widget {
-            font-size: 12px;
+            font-size: 11px;
+        }
+
+        .k-grid td{
+            padding: .5rem
         }
     </style>
 
@@ -69,11 +89,14 @@
 
         <script type="text/x-kendo-template" id="template">
             <div class="refreshBtnContainer">
-                <a role="button" class="k-button k-button-icontext k-grid-save-changes" href="\\#"><span class="k-icon k-i-check"></span>Save changes</a>
-                <a role="button" class="k-button k-button-icontext k-grid-cancel-changes" href="\\#"><span class="k-icon k-i-cancel"></span>Cancel changes</a>
+                <a role="button" title="Save" style="background-color:\\#298040" class="k-button k-button-icontext k-grid-save-changes" href="\\#"><span class="k-icon k-i-check"></span>Save Changes</a>
+                <a role="button" title="Cancel" style="background-color:\\#a73232" class="k-button k-button-icontext k-grid-cancel-changes" href="\\#"><span class="k-icon k-i-cancel"></span>Cancel Changes</a>
             </div>
             <div class="toolbar">
-                <input id="opportunityProductDrop" style="width: 200px" />
+                <!--<a href="\\#" class="k-pager-refresh k-link k-button" onchange="OnChange" title="plus"><span class="k-icon k-i-add"></span></a>-->
+                <!--<input id="opportunityProductDrop" style="width: 200px" />-->                
+                <input id="btnExistProduct" class="k-button" onclick="ExistProduct();" type="button" name="existProduct" value="Existing Product" />
+                <input id="btnWriteInProduct" class="k-button" onclick="WriteInProduct();" type="button" name="writeInProduct" value="Write-in Product" />
                 <a href="\\#" class="k-pager-refresh k-link k-button" title="Refresh"><span class="k-icon k-i-reload"></span></a>
             </div>
         </script>
@@ -81,14 +104,43 @@
         <div id="grid"></div>
 
         <script>
+
+            var valuta = "EUR";
+            var isDefaultValueAdded = false;
+
+            var parameters = GetGlobalContext().getQueryStringParameters();
+
+            var opportynityId = parameters.id != undefined ? parameters.id : "DB91AA08-F7AF-E711-80ED-3863BB347D08";
+            var priceLevelId = window.parent.Xrm.Page.getAttribute("pricelevelid") != null ? window.parent.Xrm.Page.getAttribute("pricelevelid").getValue()[0].id : "3ED0C142-7CFB-E311-A1B8-005056AD7E30";
+            var oumId = "5F4EFA02-9DEF-4FFA-BC89-E086D690B614";
+
+            var ParseParameters = function (Query) {
+                try {
+                    var ResultParameters = {};
+
+                    //NULL CHECK
+                    if (Query != undefined && Query != null) {
+
+                        //SPLIR PARAMETERS
+                        var QuerySplit = Query.split("&");
+
+                        //PARSE PARAMETERS TO ARRAY
+                        for (var i = 0; i < QuerySplit.length; i++) {
+                            var ParameterPair = QuerySplit[i].split("=");
+                            ResultParameters[ParameterPair[0]] = ParameterPair.length > 1 ? ParameterPair[1] : null;
+                        }
+                    }
+                    return ResultParameters;
+
+                }
+                catch (error) {
+                    errorHandler(error);
+                }
+            }
+
             $(document).ready(function () {
-
-                var opportynityId = "DB91AA08-F7AF-E711-80ED-3863BB347D08";
-
                 var ctx = GetCrmContext();
                 var serverUrl = location.protocol + "//" + location.host;
-
-                var crudServiceBaseUrl = "https://demos.telerik.com/kendo-ui/service";
 
                 var dataSource = new kendo.data.DataSource({
                     transport: {
@@ -97,7 +149,7 @@
                                 type: "GET",
                                 contentType: "application/json; charset=utf-8",
                                 datatype: "json",
-                                url: serverUrl + "/XRMServices/2011/OrganizationData.svc/OpportunityProductSet?$select=BaseAmount,Description,dyna_ExpectedDeliveryDate,dyna_Status,ExtendedAmount,IsPriceOverridden,IsProductOverridden,ManualDiscountAmount,OpportunityId,OpportunityProductId,PricePerUnit,ProductDescription,ProductId,ProductTypeCode,Quantity&$filter=OpportunityId/Id eq (guid'DB91AA08-F7AF-E711-80ED-3863BB347D08')",
+                                url: serverUrl + "/XRMServices/2011/OrganizationData.svc/OpportunityProductSet?$select=BaseAmount,Description,ProductDescription,dyna_ExpectedDeliveryDate,dyna_Status,ExtendedAmount,IsPriceOverridden,IsProductOverridden,ManualDiscountAmount,OpportunityId,OpportunityProductId,PricePerUnit,ProductDescription,ProductId,ProductTypeCode,Quantity&$filter=OpportunityId/Id eq (guid'" + opportynityId + "')",
                                 beforeSend: function (XMLHttpRequest) {
                                     XMLHttpRequest.setRequestHeader("Accept", "application/json");
                                 },
@@ -121,12 +173,15 @@
                                         var productId = results[i].ProductId;
                                         var productTypeCode = results[i].ProductTypeCode;
                                         var quantity = results[i].Quantity;
+                                        var productdescription = results[i].ProductDescription;
 
                                         var resultItem = {};
                                         resultItem.baseAmount = baseAmount.Value;
                                         resultItem.extendedAmount = extendedAmount.Value;
-                                        resultItem.dyna_Status = SetStatusLabel(dyna_Status.Value);
-                                        resultItem.description = description;
+                                        resultItem.dyna_StatusName = SetStatusLabel(dyna_Status.Value);
+                                        resultItem.dyna_Status = dyna_Status.Value.toString(), //SetStatusLabel(dyna_Status.Value);
+                                        resultItem.currency = valuta,
+                                        resultItem.description = productdescription;
                                         resultItem.isPriceOverridden = isPriceOverridden;
                                         resultItem.dyna_ExpectedDeliveryDate = dyna_ExpectedDeliveryDate;
                                         resultItem.isProductOverridden = isProductOverridden;
@@ -136,10 +191,12 @@
                                         resultItem.opportunityProductId = opportunityProductId;
                                         resultItem.pricePerUnit = pricePerUnit.Value;
                                         resultItem.productDescription = productDescription;
-                                        resultItem.productId = productId != null ? productId.Id : null;
+                                        resultItem.productId = productId != null ? productId.Id : "";
                                         resultItem.productIdName = productId != null ? productId.Name : "";
                                         resultItem.productTypeCode = productTypeCode != null ? productTypeCode.Value : null;
                                         resultItem.quantity = quantity;
+                                        resultItem.manualDiscountProcentage = manualDiscountAmount.Value / extendedAmount.Value;
+
 
                                         resultOpp.push(resultItem);
                                     }
@@ -151,8 +208,13 @@
                                 }
                             });
                         },
+                        change: function (e) {
+                            alert("change");
+                        },
                         update: function (options) {
                             var item = options.data;
+
+                            item.extendedAmount = (parseFloat(item.quantity).toFixed(0) * parseFloat(item.pricePerUnit).toFixed(2)) - parseFloat(item.manualDiscountAmount).toFixed(2);
 
                             var entity = {};
 
@@ -163,22 +225,31 @@
                                 };
                             }
 
-                            entity.Description = item.description != null ? item.description : "";
+                            entity.ProductDescription = item.description != null ? item.description : "";
                             entity.Quantity = parseFloat(item.quantity).toFixed(0);
 
-                            entity.BaseAmount = {
-                                Value: parseFloat(item.baseAmount).toFixed(2)
-                            };
+                            if (item.dyna_ExpectedDeliveryDate != "") {
+                                var d = item.dyna_ExpectedDeliveryDate;
+                                entity.dyna_ExpectedDeliveryDate = (d.getMonth() + 1) + "/" + d.getDate() + "/" + d.getFullYear();
+                            }
+
+                            //entity.BaseAmount = {
+                            //    Value: parseFloat(item.baseAmount).toFixed(2)
+                            //};
                             entity.OpportunityId = {
                                 Id: item.opportunityId,
                                 LogicalName: "opportunity"
                             };
-                            entity.IsPriceOverridden = item.IsPriceOverridden;
+                            entity.IsPriceOverridden = item.IsPriceOverridden == true ? true : false;
                             entity.PricePerUnit = {
                                 Value: parseFloat(item.pricePerUnit).toFixed(2)
                             };
                             entity.ManualDiscountAmount = {
                                 Value: parseFloat(item.manualDiscountAmount).toFixed(2)
+                            };
+
+                            entity.dyna_Status = {
+                                Value: parseInt(item.dyna_Status)
                             };
 
                             $.ajax({
@@ -194,40 +265,71 @@
                                 async: true,
                                 success: function (data, textStatus, xhr) {
                                     options.success(item);
+                                    $("#grid").data("kendoGrid").dataSource.read();
                                 },
                                 error: function (xhr, textStatus, errorThrown) {
-                                    Xrm.Utility.alertDialog(textStatus + " " + errorThrown);
+                                    //Xrm.Utility.alertDialog(textStatus + " " + errorThrown);
+                                    $("#grid").data("kendoGrid").dataSource.read();
                                 }
                             });
 
 
                         },
                         destroy: function (options) {
-                            alert("Delete");
+
+                            var item = options.data;
+                            $.ajax({
+                                type: "POST",
+                                contentType: "application/json; charset=utf-8",
+                                datatype: "json",
+                                url: Xrm.Page.context.getClientUrl() + "/XRMServices/2011/OrganizationData.svc/OpportunityProductSet(guid'" + item.opportunityProductId + "')",
+                                beforeSend: function (XMLHttpRequest) {
+                                    XMLHttpRequest.setRequestHeader("Accept", "application/json");
+                                    XMLHttpRequest.setRequestHeader("X-HTTP-Method", "DELETE");
+                                },
+                                async: true,
+                                success: function (data, textStatus, xhr) {
+                                    options.success(item);                                    
+                                },
+                                error: function (xhr, textStatus, errorThrown) {
+                                    //Xrm.Utility.alertDialog(textStatus + " " + errorThrown);
+                                    $("#grid").data("kendoGrid").dataSource.read();
+                                }
+                            });
                         },
                         create: function (options) {
 
-                            debugger
+                            //var value = $("#opportunityProductDrop").val();
                             var item = options.data;
+
+
+                            item.extendedAmount = (parseFloat(item.quantity).toFixed(0) * parseFloat(item.pricePerUnit).toFixed(2)) - parseFloat(item.manualDiscountAmount).toFixed(2);
+                            item.currency = valuta;
 
                             var entity = {};
 
-                            if (item.productId != null) {
+                            if (item.productId != "") {
                                 entity.ProductId = {
                                     Id: item.productId,
                                     LogicalName: "product"
                                 };
+
+
+                                entity.UoMId = {
+                                    Id: oumId,
+                                    LogicalName: "uom"
+                                };
                             }
 
-                            entity.UoMId = {
-                                Id: "5F4EFA02-9DEF-4FFA-BC89-E086D690B614",
-                                LogicalName: "uom"
-                            };
-
-                            entity.Description = item.description != null ? item.description : "";
+                            entity.ProductDescription = item.description != "" ? item.description : "";
                             entity.Quantity = parseFloat(item.quantity).toFixed(0);
-                            entity.IsProductOverridden = false; // Existing
-                            entity.IsPriceOverridden = false; //Use default
+                            entity.IsProductOverridden = item.isProductOverridden; // Existing
+                            entity.IsPriceOverridden = item.isPriceOverridden; //Use default
+
+                            if (item.dyna_ExpectedDeliveryDate != "") {
+                                var d = item.dyna_ExpectedDeliveryDate;
+                                entity.dyna_ExpectedDeliveryDate = (d.getMonth() + 1) + "/" + d.getDate() + "/" + d.getFullYear();
+                            }
 
                             //entity.BaseAmount = {
                             //    Value: parseFloat(item.baseAmount).toFixed(2)
@@ -236,12 +338,15 @@
                                 Id: opportynityId,
                                 LogicalName: "opportunity"
                             };
-                            entity.IsPriceOverridden = item.IsPriceOverridden;
                             entity.PricePerUnit = {
                                 Value: parseFloat(item.pricePerUnit).toFixed(2)
                             };
                             entity.ManualDiscountAmount = {
                                 Value: parseFloat(item.manualDiscountAmount).toFixed(2)
+                            };
+
+                            entity.dyna_Status = {
+                                Value: parseInt(item.dyna_Status)
                             };
 
                             $.ajax({
@@ -258,12 +363,15 @@
                                     var result = data.d;
                                     var newEntityId = result.OpportunityProductId;
 
-                                    var ddl = $("#opportunityProductDrop").data("kendoDropDownList");
-                                    ddl.value(-1);
+                                    //var ddl = $("#opportunityProductDrop").data("kendoDropDownList");
+                                    //ddl.value(-1);
+                                    isDefaultValueAdded = false;
                                     options.success(item);
+                                    $("#grid").data("kendoGrid").dataSource.read();
                                 },
                                 error: function (xhr, textStatus, errorThrown) {
-                                    Xrm.Utility.alertDialog(textStatus + " " + errorThrown);
+                                    //Xrm.Utility.alertDialog(textStatus + " " + errorThrown);
+                                    $("#grid").data("kendoGrid").dataSource.read();
                                 }
                             });
 
@@ -282,56 +390,127 @@
                             fields: {
                                 isProductOverridden: { type: "boolean", editable: true, nullable: true },
                                 isPriceOverridden: { type: "boolean", editable: true, nullable: true },
+                                currency: { type: "string", editable: false },
                                 productId: { type: "string" },
                                 productIdName: { editable: true, type: "string" },
-                                description: { editable: false, type: "string" },
-                                pricePerUnit: { type: "number", validation: { required: true, min: 1 } },
+                                description: { editable: true, type: "string" },
+                                pricePerUnit: { editable: true, type: "number", validation: { min: 1 } },
                                 quantity: { type: "number", validation: { min: 1, required: true } },
                                 manualDiscountAmount: { type: "number", validation: { required: true, min: 0 } },
+                                manualDiscountProcentage: { type: "number", validation: { required: false, min: 0 } },
                                 extendedAmount: { type: "number", editable: false, validation: { required: true, min: 1 } },
-                                dyna_Status: { type: "string", editable: false },
-                                dyna_ExpectedDeliveryDate: { type: "date", editable: false }
+                                dyna_StatusName: { type: "string", editable: true },
+                                dyna_Status: { type: "string" },
+                                dyna_ExpectedDeliveryDate: { type: "date", editable: true }
                             }
                         }
                     }
                 });
 
+
+
                 var grid = $("#grid").kendoGrid({
                     dataSource: dataSource,
                     navigatable: true,
                     pageable: true,
-                    height: 550,
+                    height: 300,
                     toolbar: kendo.template($("#template").html()), //["create", "save", "cancel"],
+                    dataBound: OnDataBound,
                     edit: function (e) {
+
                         if (e.model.isNew()) {
                             // Disable the editor of the "id" column when editing data items
-                            debugger
-                            //var numeric = e.container.find("input[name=dyna_ExpectedDeliveryDate]").data("kendoNumericTextBox");
-                            //numeric.enable(true);
-                            if ($("#opportunityProductDrop").val() != 1) {
-                                $(e.container).find('input[name="description"]').attr("readonly", false);
+
+
+                            if (!productState || !e.model.isProductOverridden) {
+                                e.model.set("isPriceOverridden", false);
+                                $("input[name=description]").parent().html("");
+                            }
+                            else if (productState || e.model.isProductOverridden) {
+                                e.model.set("isPriceOverridden", true);
+                                $("input[aria-owns=productDrop_listbox]").parent().html("");
+
                             }
 
-                            $(".k-grid-edit-row td")[8].innerText = "";
-                            e.model.dyna_ExpectedDeliveryDate = null;
+                            if ($(".k-grid-edit-row td span:eq(1)")[0].innerText == "No" || $(".k-grid-edit-row td span:eq(1)")[0].innerText == "") {
+                                if (e.sender._lastCellIndex == 3) {
+                                    this.closeCell();
+                                }
+                            }
+
+                            if (!isDefaultValueAdded) {
+                                e.model.set("quantity", parseFloat(1).toFixed(0));
+                                e.model.set("currency", valuta);
+                                e.model.set("dyna_Status", "1");
+                                e.model.set("dyna_StatusName", "Open");
+                                isDefaultValueAdded = true;
+                                e.model.set("isProductOverridden", productState);
+                                e.model.set("isPriceOverridden", productState);
+                            }
+                        }
+                        else if (!e.model.isNew()) {
+                            if ($(".k-grid-edit-row td:eq(0)")[0].innerText != "Yes") {
+                                if (e.sender._lastCellIndex == 3) {
+                                    this.closeCell();
+                                }
+                            }
+
                         }
                     },
                     columns: [
-                        { template: '<input type="checkbox" #= isPriceOverridden ? \'checked="checked"\' : "" # class="chkbx" />', title: "Price Overriden", width: 110 },
-                        //{ field: "isPriceOverridden", title: "Price Overriden", width: 120, editor: customBoolEditor },
-                        { field: "productIdName", title: "Existing Product", template: '#=productIdName#', editor: customBoolDropDrown, width: 150 },
-                        //{ field: "productIdName", title: "Existing Product", editor: customBoolDropDrown, width: 150 },
-                        { field: "description", title: "Name", width: 150 },
-                        { field: "pricePerUnit", title: "Selling Price", format: "{0:c}", width: 120 },
-                        { field: "quantity", title: "Quantity", width: 120 },
-                        { field: "manualDiscountAmount", title: "Discount Amount", format: "{0:c}", width: 120 },
-                        { field: "extendedAmount", title: "Opportunity Line Amount", format: "{0:c}", width: 120 },
-                        { field: "dyna_Status", title: "Status", width: 120 },
-                        { field: "dyna_ExpectedDeliveryDate", title: "Expected Delivery Date", format: "{0:dd-MM-yyyy}", width: 120 },
-                        { command: "destroy", title: "&nbsp;", width: 150 }
+                        { field: "isPriceOverridden", editor: customBoolEditor, template: '<span>#= isPriceOverridden ? "Yes" : "No"#</span>', title: "Price Overriden", width: 50 },
+                        { field: "productIdName", title: "Existing Product", template: '#=productIdName == null ? "" : productIdName#', editor: customBoolDropDrown, width: 120 },
+                        { field: "description", title: "Name", width: 120 },
+                        //{ field: "currency", title: "-", width: 50 },
+                        { field: "pricePerUnit", title: "Selling Price", format: "{0:n}", width: 60, editor: PriceEditor },
+                        { field: "quantity", title: "Quantity", width: 60, editor: QuantityEditor },
+                        { field: "manualDiscountProcentage", title: "Discount %", format: "{0:p0}", width: 60, editor: DiscountEditor },
+                        { field: "extendedAmount", title: "Opportunity Line Amount", format: "{0:n}", width: 60 },
+                        { field: "dyna_StatusName", editor: customDropDownStatus, title: "Status", width: 70 },
+                        { field: "dyna_ExpectedDeliveryDate", title: "Expected Delivery Date", format: "{0:dd-MM-yyyy}", width: 100 },
+                        { field: "manualDiscountAmount", hidden: true, title: "Discount Amount", format: "{0:n}", width: 60, editor: DiscountEditor },
+                        { command: { text: "Delete", click: DeleteRow }, title: "&nbsp;", width: 50, template: "<div class='k-button'><span class='k-icon k-delete'></span></div>" }
+                        //{ command: "destroy", title: "&nbsp;", width: 50, editor: '<input id="btnDelete" class="k-button" onclick="DeleteRow(this);" type="button" name="existProduct" value="Delete" />' }
                     ],
                     editable: true
-                });
+                });               
+
+
+                function PriceEditor(container, options) {
+                    $('<input data-bind="value:' + options.field + '"/>')
+                        .appendTo(container)
+                        .kendoNumericTextBox({
+                            decimals: 2,
+                            format: "n",
+                            change: PriceChange,
+                            spin: PriceChange
+                        });
+                }
+
+
+                function QuantityEditor(container, options) {
+                    $('<input data-bind="value:' + options.field + '"/>')
+                        .appendTo(container)
+                        .kendoNumericTextBox({
+                            decimals: 2,
+                            format: "n",
+                            change: QuantityChange,
+                            spin: QuantityChange
+                        });
+                }
+
+                function DiscountEditor(container, options) {
+                    $('<input data-bind="value:' + options.field + '"/>')
+                        .appendTo(container)
+                        .kendoNumericTextBox({
+                            format: "p0",
+                            min: 0,
+                            max: 0.1,
+                            step: 0.01,
+                            change: DicountChange,
+                            spin: DicountChange
+                        });
+                }
 
 
                 var data = [
@@ -354,33 +533,151 @@
                 });
             });
 
+            $("#grid").on("mousedown", ".k-grid-cancel-changes", function (e) {
+                var ddl = $("#opportunityProductDrop").data("kendoDropDownList");
+                ddl.value(-1);
+            });
+
+            //$("#grid").on("click", ".k-grid-delete", function (e) {
+            //    $("#grid").data("kendoGrid").saveChanges();
+            //});
+
+
+            
+
+            function PriceChange() {
+                var e = this.element;
+                var grid = $("#grid").data("kendoGrid").dataItem($(e).closest("tr"));
+                var element = $($("#grid").data("kendoGrid").current()[0]).closest("tr").attr("data-uid");
+
+                var discount = (parseFloat($(e).data("kendoNumericTextBox").value()).toFixed(2) * parseFloat(grid.quantity).toFixed(0)) * parseFloat(grid.manualDiscountProcentage);
+                var total = (parseFloat($(e).data("kendoNumericTextBox").value()).toFixed(2) * parseFloat(grid.quantity).toFixed(0)) - discount;
+
+                $("#grid").find("tr[data-uid='" + element + "'] td:eq(6)").text(parseFloat(total).toFixed(2));
+                grid.extendedAmount = parseFloat(total).toFixed(2);
+                grid.manualDiscountAmount = parseFloat(discount).toFixed(2);
+            }
+
+            function QuantityChange() {
+                var e = this.element;
+                var grid = $("#grid").data("kendoGrid").dataItem($(e).closest("tr"));
+                var element = $($("#grid").data("kendoGrid").current()[0]).closest("tr").attr("data-uid");
+
+                var discount = (parseFloat($(e).data("kendoNumericTextBox").value()).toFixed(2) * parseFloat($(e).data("kendoNumericTextBox").value().toFixed(0)) * parseFloat(grid.manualDiscountProcentage));
+                var total = (parseFloat(grid.pricePerUnit).toFixed(2) * parseFloat($(e).data("kendoNumericTextBox").value()).toFixed(0)) - discount;
+
+                $("#grid").find("tr[data-uid='" + element + "'] td:eq(6)").text(parseFloat(total).toFixed(2));
+                grid.extendedAmount = parseFloat(total).toFixed(2);
+                grid.manualDiscountAmount = parseFloat(discount).toFixed(2);
+            }
+
+            function DicountChange() {
+                var e = this.element;
+                var grid = $("#grid").data("kendoGrid").dataItem($(e).closest("tr"));
+                var element = $($("#grid").data("kendoGrid").current()[0]).closest("tr").attr("data-uid");
+
+                var discount = (parseFloat(grid.pricePerUnit).toFixed(2) * parseFloat(grid.quantity).toFixed(0)) * parseFloat($(e).data("kendoNumericTextBox").value());
+                var total = (parseFloat(grid.pricePerUnit).toFixed(2) * parseFloat(grid.quantity).toFixed(0)) - discount;
+
+                $("#grid").find("tr[data-uid='" + element + "'] td:eq(6)").text(parseFloat(total).toFixed(2));
+
+
+                grid.extendedAmount = parseFloat(total).toFixed(2);
+                grid.manualDiscountAmount = parseFloat(discount).toFixed(2);
+            }
+
             function onChange() {
+
                 var value = $("#opportunityProductDrop").val();
                 var grid = $("#grid").data("kendoGrid");
 
+
                 if (value == 1 || value == 2) {
+                    isDefaultValueAdded = false;
+                    grid.addRow();
+
+                    if (value == 1) {
+                        $(".k-grid-edit-row td:eq(1)").focus()
+                    }
+                }
+            }
+
+            function OnDataBound(e) {
+                $(".k-grid-Delete").find("span").addClass("k-icon k-delete");
+            }
+
+            function DeleteRow(e) {
+                var grid = $("#grid").data("kendoGrid");
+                var tr = $(e.currentTarget).parent().closest("tr");
+                grid.removeRow(tr);
+
+                $("#grid").data("kendoGrid").saveChanges();
+            }
+
+            var productState = false;
+            function ExistProduct() {
+                productState = false;
+                var grid = $("#grid").data("kendoGrid");
+                isDefaultValueAdded = false;
                 grid.addRow();
-            };
+            }
+
+            function WriteInProduct() {
+                productState = true;
+                var grid = $("#grid").data("kendoGrid");
+                isDefaultValueAdded = false;
+                grid.addRow();
+            }
 
             function customBoolEditor(container, options) {
                 var guid = kendo.guid();
-                $('<input class="k-checkbox" id="' + guid + '" type="checkbox" name="isPriceOverridden" data-type="boolean" data-bind="checked:isPriceOverridden">').appendTo(container);
-                $('<label class="k-checkbox-label" for="' + guid + '">&#8203;</label>').appendTo(container);
+                $('<input onchange="EnableSellingPrice(this);" class="" id="' + guid + '" type="checkbox" name="isPriceOverridden" data-type="boolean" data-bind="checked:isPriceOverridden">').appendTo(container);
             }
+
+            function EnableSellingPrice(e) {
+
+                var grid = $("#grid").data("kendoGrid").dataItem($(e).closest("tr"));
+                var element = $($("#grid").data("kendoGrid").current()[0]).closest("tr").attr("data-uid");
+                //grid.pricePerUnit = parseFloat(dataItem.amount).toFixed(2);
+                grid.IsPriceOverridden = e.checked ? true : false;
+
+                //$("#grid").find("tr[data-uid='" + element + "'] td:eq(4)").text(parseFloat(dataItem.amount).toFixed(2));
+                //$("#grid").find("tr[data-uid='" + element + "'] td:eq(5)").text(grid.quantity);
+            }
+
+            var dataStatus = [
+                            { text: "Open", value: "1" },
+                            { text: "Delievered", value: "2" },
+                            { text: "Canceled", value: "3" },
+            ];
+
+            function customDropDownStatus(container, options) {
+
+                $('<input id="dyna_Status" data-text-field="text" data-value-field="value" data-bind="value:dyna_Status "/>').appendTo(container)
+                .kendoComboBox({
+                    dataTextField: "text",
+                    dataValueField: "value",
+                    change: function (e) {
+                        options.model["dyna_StatusName"] = e.sender.text();
+                    },
+                    index: 1,
+                    dataSource: dataStatus,
+                });
+            }
+
 
             var proId = null
             function customBoolDropDrown(container, options) {
 
                 var ctx = GetCrmContext();
                 var serverUrl = location.protocol + "//" + location.host;
-                debugger
+
                 $('<input id="productDrop" data-text-field="productIdName" data-value-field="productId" data-bind="value:productId "/>').appendTo(container)
                 .kendoComboBox({
                     placeholder: "Select product",
                     dataTextField: "productIdName",
                     dataValueField: "productId",
                     change: function (e) {
-                        debugger
                         options.model["productIdName"] = e.sender.text();
                     },
                     select: onSelectProduct,
@@ -395,7 +692,7 @@
                                     type: "GET",
                                     contentType: "application/json; charset=utf-8",
                                     datatype: "json",
-                                    url: Xrm.Page.context.getClientUrl() + "/XRMServices/2011/OrganizationData.svc/ProductPriceLevelSet?$select=Amount,PriceLevelId,ProductId,product_price_levels/Name,product_price_levels/ProductId&$expand=product_price_levels&$filter=PriceLevelId/Id eq (guid'3ED0C142-7CFB-E311-A1B8-005056AD7E30')",
+                                    url: Xrm.Page.context.getClientUrl() + "/XRMServices/2011/OrganizationData.svc/ProductPriceLevelSet?$select=Amount,PriceLevelId,ProductId,product_price_levels/Name,product_price_levels/ProductId&$expand=product_price_levels&$filter=PriceLevelId/Id eq (guid'" + priceLevelId + "')",
                                     beforeSend: function (XMLHttpRequest) {
                                         XMLHttpRequest.setRequestHeader("Accept", "application/json");
                                     },
@@ -437,16 +734,21 @@
             function onSelectProduct(e) {
 
                 if (e.item) {
-                    debugger
+
                     var dataItem = this.dataItem(e.item.index());
                     var grid = $("#grid").data("kendoGrid").dataItem(this.element.closest("tr"));
-                    grid.pricePerUnit = dataItem.amount;
+                    var element = $($("#grid").data("kendoGrid").current()[0]).closest("tr").attr("data-uid");
+                    grid.pricePerUnit = parseFloat(dataItem.amount).toFixed(2);
+                    grid.quantity = parseFloat(1).toFixed(0);
 
-                    var d = $("#grid").find("tr[data-uid='" + model.uid + "'] td:eq(3)").text(dataItem.amount);
+                    var total = grid.pricePerUnit * grid.quantity;
 
-                    //proId = dataItem.productId;
+                    $("#grid").find("tr[data-uid='" + element + "'] td:eq(3)").text(parseFloat(dataItem.amount).toFixed(2));
+                    $("#grid").find("tr[data-uid='" + element + "'] td:eq(4)").text(grid.quantity);
+                    $("#grid").find("tr[data-uid='" + element + "'] td:eq(6)").text(parseFloat(total).toFixed(2));
 
-                    //kendoConsole.log("event :: select (" + dataItem.text + " : " + dataItem.value + ")");
+                    grid.extendedAmount = parseFloat(total).toFixed(2);
+
                 } else {
                     //kendoConsole.log("event :: select");
                 }
@@ -480,6 +782,7 @@
                     else { throw new Error(errorMessage); }
                 }
             }
+
         </script>
     </div>
 
