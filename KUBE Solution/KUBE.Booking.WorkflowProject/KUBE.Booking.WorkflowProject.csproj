@@ -78,7 +78,9 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="AddEquipmentToBookedResource.cs" />
     <Compile Include="AddRelatedOrderProduct.cs" />
+    <Compile Include="AddEquipmentFromSubToParentBooking.cs" />
     <Compile Include="AddTableArrangementProductToBooking.cs" />
     <Compile Include="AddResourceProductToTheBooking.cs" />
     <Compile Include="AddYdelserBasedOnRessources.cs" />

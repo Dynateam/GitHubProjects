@@ -1,0 +1,252 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        html {
+            font-size: 14px;
+            font-family: Arial, Helvetica, sans-serif;
+        }
+    </style>
+    <title></title>
+    <link rel="stylesheet" href="/WebResources/dyna_kendo.2016.2.714.common.material.min.css" />
+    <link rel="stylesheet" href="/WebResources/dyna_kendo.2016.2.714.material.min.css" />
+    <link rel="stylesheet" href="/WebResources/dyna_kendo.2016.2.714.default.mobile.min.css" />
+
+    <script src="/WebResources/ClientGlobalContext.js.aspx" type="text/javascript"></script>
+    <script src="/WebResources/dyna_jquery.1.9.1.min.js"></script>
+    <script src="/WebResources/dyna_kendo.2016.2.714.all.min.js"></script>
+    <script src="/WebResources/dyna_json2.min.js"></script>
+    <script src="/WebResources/dyna_SDK_Rest.min.js"></script>
+
+    <script src="/WebResources/dyna_core.js"></script>
+    <script src="/WebResources/dyna_sendEmail.js"></script>
+    
+
+    <style>
+        .k-editor-inline {
+            margin: 0;
+            padding: 21px 21px 11px;
+            border-width: 0;
+            box-shadow: none;
+            background: none;
+        }
+
+            .k-editor-inline.k-state-active {
+                border-width: 1px;
+                padding: 20px 20px 10px;
+                background: none;
+            }
+
+        #topEditor {
+            height: 650px;
+            border: 1px solid #999;
+        }
+
+            #topEditor h2, .column h3 {
+                font-size: 24px;
+                color: #2db245;
+                font-family: "Droid Sans",DroidSansWeb,"Segoe UI","Lucida Sans Unicode",Arial,Helvetica,sans-serif;
+            }
+
+        .k-editor-inline p {
+            font-size: 13px;
+        }
+
+        .column {
+            display: inline-block;
+            vertical-align: top;
+            max-width: 250px;
+        }
+
+            .column a {
+                color: #e15613;
+            }
+
+            .column h3 {
+                padding-top: 10px;
+                font-size: 15px;
+            }
+
+        .k-table {
+            border-spacing: 0;
+            border-collapse: collapse;
+            border: 1px solid #999;
+            width: 100%;
+        }
+
+            .k-table td, .k-table th {
+                border: 1px solid #999;
+                padding: 3px;
+            }
+    </style>
+</head>
+<body>
+    <div>
+        <h2>Arrangement - Send ordrebekræftelse</h2>
+    </div>
+
+    <div style="margin-top:50px">
+        <div class="demo-section wide k-content">
+            <div id="topEditor">
+                <p>
+                    <span data-bind="text: booking.Subject"></span>    
+                </p>
+
+            <style>
+                p {
+                    font-size: 13px;
+                }
+
+                    p em {
+                        line-height: 12px;
+                    }
+            </style>
+            </div>
+        </div>
+        <form style="margin-bottom:20px; margin-top:20px; float:right; margin-right:20px">
+            <button id="btnSendEmail" type="submit" style="padding:10px; background-color:#382E24; color:#fff; border:none" disabled="disabled">
+                Send E-mail
+            </button>
+        </form>
+    </div>
+
+    <script>
+        function initConfirmEmailWindow() {
+            var params = dyna.str.parseQueryString(GetGlobalContext().getQueryStringParameters()["Data"]);
+            var options =
+            {
+                kendoEditorElement: $("#topEditor"),
+                sendEmailButton: $("#btnSendEmail"),
+                content: $("#topEditor"),
+                editorOptions: {
+                    tools: [
+                        "viewHtml",
+                        "bold",
+                        "italic",
+                        "underline",
+                        "strikethrough",
+                        "justifyLeft",
+                        "justifyCenter",
+                        "justifyRight",
+                        "justifyFull",
+                        "createLink",
+                        "unlink",
+                        //"insertImage",
+                        "createTable",
+                        "addColumnLeft",
+                        "addColumnRight",
+                        "addRowAbove",
+                        "addRowBelow",
+                        "deleteRow",
+                        "deleteColumn",
+                        "foreColor"
+                    ]
+                },
+                emailBuilderConfig: {
+                    str: {
+                        YES: 'Ja',
+                        NO: 'Nej'
+                    },
+                },
+                loadEntitiesConfig: new kendo.data.ObservableObject(
+                {
+                    readonly: function(){
+                        return true;
+                    },
+                    url: SDK.REST.getClientUrl(),
+                    booking: null,
+                    productlines: null,
+                    load: [
+                        {
+                            id: params.id,
+                            logicalName: params.logicalName,
+                            schemaName: params.schemaName,
+                            select: [],
+                            resultAttribute: 'booking',
+                            data: null
+                        },
+                        {
+                            schemaName: 'dyna_bookingproductline',
+                            getFilter: function (currentLoad, allLoads, loadedData) {
+                                var f = 'dyna_bookingid/Id ' + "eq (guid'" + params.id + "')";
+                                f = f + ' and ';
+                                f = f + "statecode/Value eq 0";
+
+                                return f;
+                            },
+                            resultAttribute: 'productlines',
+                            select: [],
+                            data: []
+                        }
+                    ],
+                    data: []
+                }),
+
+                getEmailName: function () {
+                    return 'Email - ' + this.loadEntitiesConfig.booking.Subject;
+                },
+                getEmailBody1: function () {
+                    return this.kendoEditor.value();
+                },
+                getEmailBody2: function () {
+                    return "";
+                },
+                getBookingId: function () {
+                    return {
+                        Id: params.id,
+                        LogicalName: params.logicalName
+                    };
+                },
+                sendEmail: function () {
+                    var entity =
+                    {
+                        dyna_Booking_Id1: this.getBookingId(),
+                        dyna_name: this.getEmailName(),
+                        dyna_EmailBody: this.getEmailBody1(),
+                        dyna_EmailBody2: this.getEmailBody2()
+                    };
+
+                    SDK.REST.createRecord(
+                        entity,
+                        "dyna_emailqueue",
+                        function (result) {
+                            closeWindow(true);
+                        },
+                        function (error) {
+                            alert(error.message);
+                        }
+                    );
+                }
+            };
+
+            options.kendoEditorElement.kendoEditor(options.editorOptions);
+            options.kendoEditor = options.kendoEditorElement.data('kendoEditor');
+
+            kendo.bind(options.content, options.loadEntitiesConfig);
+            kendo.init(options.content);
+
+            options.kendoEditor.bind('change', function (e) {
+                kendo.unbind(options.content);
+                kendo.bind(options.content, options.loadEntitiesConfig);
+                kendo.init(options.content);
+            });
+
+            var promise = dyna.booking.loadEntities(options.loadEntitiesConfig);
+
+            if (promise != null) {
+                promise.then(function (o) {
+                    options.sendEmailButton.prop('disabled', false);
+                });
+            }
+
+            options.sendEmailButton.click(function (arg) {
+                arg.preventDefault();
+                options.sendEmail.call(options);
+                return false;
+            });
+        };
+
+        $(document).ready(initConfirmEmailWindow);
+    </script>
+</body>
+</html>
