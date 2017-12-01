@@ -68,8 +68,8 @@
             font-size: 11px;
         }
 
-        .k-grid td{
-            padding: .5rem
+        .k-grid td {
+            padding: .5rem;
         }
     </style>
 
@@ -94,7 +94,7 @@
             </div>
             <div class="toolbar">
                 <!--<a href="\\#" class="k-pager-refresh k-link k-button" onchange="OnChange" title="plus"><span class="k-icon k-i-add"></span></a>-->
-                <!--<input id="opportunityProductDrop" style="width: 200px" />-->                
+                <!--<input id="opportunityProductDrop" style="width: 200px" />-->
                 <input id="btnExistProduct" class="k-button" onclick="ExistProduct();" type="button" name="existProduct" value="Existing Product" />
                 <input id="btnWriteInProduct" class="k-button" onclick="WriteInProduct();" type="button" name="writeInProduct" value="Write-in Product" />
                 <a href="\\#" class="k-pager-refresh k-link k-button" title="Refresh"><span class="k-icon k-i-reload"></span></a>
@@ -110,7 +110,7 @@
 
             var parameters = GetGlobalContext().getQueryStringParameters();
 
-            var opportynityId = parameters.id != undefined ? parameters.id : "DB91AA08-F7AF-E711-80ED-3863BB347D08";
+            var opportynityId = parameters.id != undefined ? parameters.id : "2561A578-9813-E711-9D4A-005056BE4EEC";
             var priceLevelId = window.parent.Xrm.Page.getAttribute("pricelevelid") != null ? window.parent.Xrm.Page.getAttribute("pricelevelid").getValue()[0].id : "3ED0C142-7CFB-E311-A1B8-005056AD7E30";
             var oumId = "5F4EFA02-9DEF-4FFA-BC89-E086D690B614";
 
@@ -149,7 +149,7 @@
                                 type: "GET",
                                 contentType: "application/json; charset=utf-8",
                                 datatype: "json",
-                                url: serverUrl + "/XRMServices/2011/OrganizationData.svc/OpportunityProductSet?$select=BaseAmount,Description,ProductDescription,dyna_ExpectedDeliveryDate,dyna_Status,ExtendedAmount,IsPriceOverridden,IsProductOverridden,ManualDiscountAmount,OpportunityId,OpportunityProductId,PricePerUnit,ProductDescription,ProductId,ProductTypeCode,Quantity&$filter=OpportunityId/Id eq (guid'" + opportynityId + "')",
+                                url: serverUrl + "/XRMServices/2011/OrganizationData.svc/OpportunityProductSet?$select=UoMId,dyna_CustomerPrice,BaseAmount,Description,ProductDescription,dyna_ExpectedDeliveryDate,dyna_Status,ExtendedAmount,IsPriceOverridden,IsProductOverridden,ManualDiscountAmount,OpportunityId,OpportunityProductId,PricePerUnit,ProductDescription,ProductId,ProductTypeCode,Quantity&$filter=OpportunityId/Id eq (guid'" + opportynityId + "')",
                                 beforeSend: function (XMLHttpRequest) {
                                     XMLHttpRequest.setRequestHeader("Accept", "application/json");
                                 },
@@ -174,8 +174,11 @@
                                         var productTypeCode = results[i].ProductTypeCode;
                                         var quantity = results[i].Quantity;
                                         var productdescription = results[i].ProductDescription;
+                                        var dyna_CustomerPrice = results[i].dyna_CustomerPrice;
+                                        var uoMId = results[i].UoMId;
 
                                         var resultItem = {};
+                                        resultItem.uoMId = uoMId != null ? uoMId.Id : "";
                                         resultItem.baseAmount = baseAmount.Value;
                                         resultItem.extendedAmount = extendedAmount.Value;
                                         resultItem.dyna_StatusName = SetStatusLabel(dyna_Status.Value);
@@ -195,7 +198,8 @@
                                         resultItem.productIdName = productId != null ? productId.Name : "";
                                         resultItem.productTypeCode = productTypeCode != null ? productTypeCode.Value : null;
                                         resultItem.quantity = quantity;
-                                        resultItem.manualDiscountProcentage = manualDiscountAmount.Value / extendedAmount.Value;
+                                        resultItem.dyna_CustomerPrice = dyna_CustomerPrice.Value != null ? dyna_CustomerPrice.Value : Number("0.00");
+                                        resultItem.manualDiscountProcentage = (parseFloat(manualDiscountAmount.Value) / (parseFloat(manualDiscountAmount.Value) + parseFloat(extendedAmount.Value))) * 100;
 
 
                                         resultOpp.push(resultItem);
@@ -223,6 +227,13 @@
                                     Id: item.productId,
                                     LogicalName: "product"
                                 };
+
+                                entity.UoMId = {
+                                    Id: item.uoMId,
+                                    LogicalName: "uom"
+                                };
+
+
                             }
 
                             entity.ProductDescription = item.description != null ? item.description : "";
@@ -265,7 +276,15 @@
                                 async: true,
                                 success: function (data, textStatus, xhr) {
                                     options.success(item);
-                                    $("#grid").data("kendoGrid").dataSource.read();
+
+                                    var grid = $("#grid").data("kendoGrid").dataSource;
+                                    grid.read();
+
+                                    var sum = 0;
+                                    for (var i = 0; i < grid.data().length; i++) {
+                                        sum += grid.data()[i].extendedAmount;
+                                    }
+                                    window.parent.Xrm.Page.getAttribute("totalamount").setValue(sum);
                                 },
                                 error: function (xhr, textStatus, errorThrown) {
                                     //Xrm.Utility.alertDialog(textStatus + " " + errorThrown);
@@ -289,7 +308,17 @@
                                 },
                                 async: true,
                                 success: function (data, textStatus, xhr) {
-                                    options.success(item);                                    
+                                    options.success(item);
+
+                                    var grid = $("#grid").data("kendoGrid").dataSource;
+                                    grid.read();
+
+                                    var sum = 0;
+                                    for (var i = 0; i < grid.data().length; i++) {
+                                        sum += grid.data()[i].extendedAmount;
+                                    }
+                                    window.parent.Xrm.Page.getAttribute("totalamount").setValue(sum);
+
                                 },
                                 error: function (xhr, textStatus, errorThrown) {
                                     //Xrm.Utility.alertDialog(textStatus + " " + errorThrown);
@@ -316,7 +345,7 @@
 
 
                                 entity.UoMId = {
-                                    Id: oumId,
+                                    Id: item.uoMId,
                                     LogicalName: "uom"
                                 };
                             }
@@ -367,7 +396,14 @@
                                     //ddl.value(-1);
                                     isDefaultValueAdded = false;
                                     options.success(item);
-                                    $("#grid").data("kendoGrid").dataSource.read();
+                                    var grid = $("#grid").data("kendoGrid").dataSource;
+                                    grid.read();
+
+                                    var sum = 0;
+                                    for (var i = 0; i < grid.data().length; i++) {
+                                        sum += grid.data()[i].extendedAmount;
+                                    }
+                                    window.parent.Xrm.Page.getAttribute("totalamount").setValue(sum);
                                 },
                                 error: function (xhr, textStatus, errorThrown) {
                                     //Xrm.Utility.alertDialog(textStatus + " " + errorThrown);
@@ -392,6 +428,7 @@
                                 isPriceOverridden: { type: "boolean", editable: true, nullable: true },
                                 currency: { type: "string", editable: false },
                                 productId: { type: "string" },
+                                uoMId: { type: "string" },
                                 productIdName: { editable: true, type: "string" },
                                 description: { editable: true, type: "string" },
                                 pricePerUnit: { editable: true, type: "number", validation: { min: 1 } },
@@ -399,6 +436,7 @@
                                 manualDiscountAmount: { type: "number", validation: { required: true, min: 0 } },
                                 manualDiscountProcentage: { type: "number", validation: { required: false, min: 0 } },
                                 extendedAmount: { type: "number", editable: false, validation: { required: true, min: 1 } },
+                                dyna_CustomerPrice: { type: "number", editable: false, validation: { required: true, min: 1 } },
                                 dyna_StatusName: { type: "string", editable: true },
                                 dyna_Status: { type: "string" },
                                 dyna_ExpectedDeliveryDate: { type: "date", editable: true }
@@ -432,7 +470,7 @@
 
                             }
 
-                            if ($(".k-grid-edit-row td span:eq(1)")[0].innerText == "No" || $(".k-grid-edit-row td span:eq(1)")[0].innerText == "") {
+                            if (!e.model.isPriceOverridden) { //($(".k-grid-edit-row td span:eq(1)")[0].innerText == "No" || $(".k-grid-edit-row td span:eq(1)")[0].innerText == "") {
                                 if (e.sender._lastCellIndex == 3) {
                                     this.closeCell();
                                 }
@@ -458,22 +496,23 @@
                         }
                     },
                     columns: [
-                        { field: "isPriceOverridden", editor: customBoolEditor, template: '<span>#= isPriceOverridden ? "Yes" : "No"#</span>', title: "Price Overriden", width: 50 },
-                        { field: "productIdName", title: "Existing Product", template: '#=productIdName == null ? "" : productIdName#', editor: customBoolDropDrown, width: 120 },
-                        { field: "description", title: "Name", width: 120 },
-                        //{ field: "currency", title: "-", width: 50 },
-                        { field: "pricePerUnit", title: "Selling Price", format: "{0:n}", width: 60, editor: PriceEditor },
-                        { field: "quantity", title: "Quantity", width: 60, editor: QuantityEditor },
-                        { field: "manualDiscountProcentage", title: "Discount %", format: "{0:p0}", width: 60, editor: DiscountEditor },
-                        { field: "extendedAmount", title: "Opportunity Line Amount", format: "{0:n}", width: 60 },
-                        { field: "dyna_StatusName", editor: customDropDownStatus, title: "Status", width: 70 },
-                        { field: "dyna_ExpectedDeliveryDate", title: "Expected Delivery Date", format: "{0:dd-MM-yyyy}", width: 100 },
-                        { field: "manualDiscountAmount", hidden: true, title: "Discount Amount", format: "{0:n}", width: 60, editor: DiscountEditor },
-                        { command: { text: "Delete", click: DeleteRow }, title: "&nbsp;", width: 50, template: "<div class='k-button'><span class='k-icon k-delete'></span></div>" }
+                       /*0*/ { field: "isPriceOverridden", editor: customBoolEditor, template: '<span>#= isPriceOverridden ? "Yes" : "No"#</span>', title: "Price Overriden", width: 50 },
+                       /*1*/ { field: "productIdName", title: "Existing Product", template: '#=productIdName == null ? "" : productIdName#', editor: customBoolDropDrown, width: 120 },
+                       /*2*/ { field: "description", title: "Write-In Product", width: 120 },
+                             //{ field: "currency", title: "-", width: 50 },
+                       /*3*/ { field: "pricePerUnit", title: "SSP", format: "{0:n}", width: 60, editor: PriceEditor },
+                       /*4*/ { field: "manualDiscountProcentage", title: "Discount %", format: "{0:n} %", width: 60, editor: DiscountEditor },
+                       /*5*/ { field: "dyna_CustomerPrice", title: "Customer Price", format: "{0:n}", width: 60 },
+                       /*6*/ { field: "quantity", title: "Quantity", width: 60, editor: QuantityEditor },
+                       /*7*/ { field: "extendedAmount", title: "Total Line Amount", format: "{0:n}", width: 60 },
+                       /*8*/ { field: "dyna_StatusName", editor: customDropDownStatus, title: "Status", width: 70 },
+                       /*9*/ { field: "dyna_ExpectedDeliveryDate", title: "Expected Shipment Date", format: "{0:dd-MM-yyyy}", width: 100 },
+                      /*10*/ { field: "manualDiscountAmount", hidden: true, title: "Discount Amount", format: "{0:n}", width: 60, editor: DiscountEditor },
+                      /*11*/ { command: { text: "Delete", click: DeleteRow }, title: "&nbsp;", width: 50, template: "<div class='k-button'><span class='k-icon k-delete'></span></div>" }
                         //{ command: "destroy", title: "&nbsp;", width: 50, editor: '<input id="btnDelete" class="k-button" onclick="DeleteRow(this);" type="button" name="existProduct" value="Delete" />' }
                     ],
                     editable: true
-                });               
+                });
 
 
                 function PriceEditor(container, options) {
@@ -503,10 +542,10 @@
                     $('<input data-bind="value:' + options.field + '"/>')
                         .appendTo(container)
                         .kendoNumericTextBox({
-                            format: "p0",
+                            format: "n0",
                             min: 0,
-                            max: 0.1,
-                            step: 0.01,
+                            max: 100,
+                            //step: 0.01,
                             change: DicountChange,
                             spin: DicountChange
                         });
@@ -543,61 +582,76 @@
             //});
 
 
-            
+
 
             function PriceChange() {
                 var e = this.element;
                 var grid = $("#grid").data("kendoGrid").dataItem($(e).closest("tr"));
-                var element = $($("#grid").data("kendoGrid").current()[0]).closest("tr").attr("data-uid");
+                var element = grid.uid; // $($("#grid").data("kendoGrid").current()[0]).closest("tr").attr("data-uid");
 
-                var discount = (parseFloat($(e).data("kendoNumericTextBox").value()).toFixed(2) * parseFloat(grid.quantity).toFixed(0)) * parseFloat(grid.manualDiscountProcentage);
+                var discount = (parseFloat($(e).data("kendoNumericTextBox").value()).toFixed(2) * parseFloat(grid.quantity).toFixed(0)) * parseFloat(grid.manualDiscountProcentage / 100);
                 var total = (parseFloat($(e).data("kendoNumericTextBox").value()).toFixed(2) * parseFloat(grid.quantity).toFixed(0)) - discount;
 
-                $("#grid").find("tr[data-uid='" + element + "'] td:eq(6)").text(parseFloat(total).toFixed(2));
+                var customerPrice = parseFloat(total).toFixed(2) / parseFloat(grid.quantity).toFixed(0);
+
+                $("#grid").find("tr[data-uid='" + element + "'] td:eq(7)").text(parseFloat(total).toFixed(2));
+                $("#grid").find("tr[data-uid='" + element + "'] td:eq(5)").text(parseFloat(customerPrice).toFixed(2));
                 grid.extendedAmount = parseFloat(total).toFixed(2);
                 grid.manualDiscountAmount = parseFloat(discount).toFixed(2);
+                grid.dyna_CustomerPrice = parseFloat(customerPrice).toFixed(2);
             }
 
             function QuantityChange() {
+
                 var e = this.element;
                 var grid = $("#grid").data("kendoGrid").dataItem($(e).closest("tr"));
-                var element = $($("#grid").data("kendoGrid").current()[0]).closest("tr").attr("data-uid");
+                var element = grid.uid; // $($("#grid").data("kendoGrid").current()[0]).closest("tr").attr("data-uid");
 
-                var discount = (parseFloat($(e).data("kendoNumericTextBox").value()).toFixed(2) * parseFloat($(e).data("kendoNumericTextBox").value().toFixed(0)) * parseFloat(grid.manualDiscountProcentage));
+                var discount = (parseFloat(grid.pricePerUnit).toFixed(2) * parseFloat($(e).data("kendoNumericTextBox").value().toFixed(0))) * parseFloat(grid.manualDiscountProcentage / 100);
                 var total = (parseFloat(grid.pricePerUnit).toFixed(2) * parseFloat($(e).data("kendoNumericTextBox").value()).toFixed(0)) - discount;
+                var customerPrice = parseFloat(total).toFixed(2) / parseFloat($(e).data("kendoNumericTextBox").value().toFixed(0));
 
-                $("#grid").find("tr[data-uid='" + element + "'] td:eq(6)").text(parseFloat(total).toFixed(2));
+                $("#grid").find("tr[data-uid='" + element + "'] td:eq(7)").text(parseFloat(total).toFixed(2));
+                $("#grid").find("tr[data-uid='" + element + "'] td:eq(5)").text(parseFloat(customerPrice).toFixed(2));
                 grid.extendedAmount = parseFloat(total).toFixed(2);
                 grid.manualDiscountAmount = parseFloat(discount).toFixed(2);
+                grid.dyna_CustomerPrice = parseFloat(customerPrice).toFixed(2);
             }
 
             function DicountChange() {
+
                 var e = this.element;
                 var grid = $("#grid").data("kendoGrid").dataItem($(e).closest("tr"));
-                var element = $($("#grid").data("kendoGrid").current()[0]).closest("tr").attr("data-uid");
+                var element = grid.uid; // $($("#grid").data("kendoGrid").current()[0]).closest("tr").attr("data-uid");
 
-                var discount = (parseFloat(grid.pricePerUnit).toFixed(2) * parseFloat(grid.quantity).toFixed(0)) * parseFloat($(e).data("kendoNumericTextBox").value());
+                var discount = (parseFloat(grid.pricePerUnit).toFixed(2) * parseFloat(grid.quantity).toFixed(0)) * parseFloat($(e).data("kendoNumericTextBox").value() / 100);
                 var total = (parseFloat(grid.pricePerUnit).toFixed(2) * parseFloat(grid.quantity).toFixed(0)) - discount;
+                var customerPrice = parseFloat(total).toFixed(2) / parseFloat(grid.quantity).toFixed(0);
 
-                $("#grid").find("tr[data-uid='" + element + "'] td:eq(6)").text(parseFloat(total).toFixed(2));
+                $("#grid").find("tr[data-uid='" + element + "'] td:eq(7)").text(parseFloat(total).toFixed(2));
+                $("#grid").find("tr[data-uid='" + element + "'] td:eq(5)").text(parseFloat(customerPrice).toFixed(2));
 
 
                 grid.extendedAmount = parseFloat(total).toFixed(2);
                 grid.manualDiscountAmount = parseFloat(discount).toFixed(2);
+
+                grid.dyna_CustomerPrice = parseFloat(customerPrice).toFixed(2);
             }
 
             function onChange() {
 
-                var value = $("#opportunityProductDrop").val();
-                var grid = $("#grid").data("kendoGrid");
+                if ($("#opportunityProductDrop").length != 0) {
+                    var value = $("#opportunityProductDrop").val();
+                    var grid = $("#grid").data("kendoGrid");
 
 
-                if (value == 1 || value == 2) {
-                    isDefaultValueAdded = false;
-                    grid.addRow();
+                    if (value == 1 || value == 2) {
+                        isDefaultValueAdded = false;
+                        grid.addRow();
 
-                    if (value == 1) {
-                        $(".k-grid-edit-row td:eq(1)").focus()
+                        if (value == 1) {
+                            $(".k-grid-edit-row td:eq(1)").focus()
+                        }
                     }
                 }
             }
@@ -647,8 +701,8 @@
 
             var dataStatus = [
                             { text: "Open", value: "1" },
-                            { text: "Delievered", value: "2" },
-                            { text: "Canceled", value: "3" },
+                            { text: "Delivered", value: "2" },
+                            { text: "Cancelled", value: "3" },
             ];
 
             function customDropDownStatus(container, options) {
@@ -692,7 +746,7 @@
                                     type: "GET",
                                     contentType: "application/json; charset=utf-8",
                                     datatype: "json",
-                                    url: Xrm.Page.context.getClientUrl() + "/XRMServices/2011/OrganizationData.svc/ProductPriceLevelSet?$select=Amount,PriceLevelId,ProductId,product_price_levels/Name,product_price_levels/ProductId&$expand=product_price_levels&$filter=PriceLevelId/Id eq (guid'" + priceLevelId + "')",
+                                    url: Xrm.Page.context.getClientUrl() + "/XRMServices/2011/OrganizationData.svc/ProductPriceLevelSet?$select=UoMId,UoMScheduleId,Amount,PriceLevelId,ProductId,product_price_levels/Name,product_price_levels/ProductId&$expand=product_price_levels&$filter=PriceLevelId/Id eq (guid'" + priceLevelId + "')",
                                     beforeSend: function (XMLHttpRequest) {
                                         XMLHttpRequest.setRequestHeader("Accept", "application/json");
                                     },
@@ -704,10 +758,14 @@
                                             var amount = results[i].Amount;
                                             var priceLevelId = results[i].PriceLevelId;
                                             var productId = results[i].ProductId;
+                                            var uoMId = results[i].UoMId;
+                                            var uoMScheduleId = results[i].UoMScheduleId;
                                             var product_price_levels_Name = results[i].product_price_levels.Name;
                                             var product_price_levels_ProductId = results[i].product_price_levels.ProductId;
 
                                             var resultItem = {};
+                                            resultItem.uoMId = uoMId != null ? uoMId.Id : "";
+                                            resultItem.uoMScheduleId = uoMScheduleId;
                                             resultItem.productIdName = productId.Name;
                                             resultItem.productId = productId.Id;
                                             resultItem.amount = amount.Value;
@@ -737,15 +795,17 @@
 
                     var dataItem = this.dataItem(e.item.index());
                     var grid = $("#grid").data("kendoGrid").dataItem(this.element.closest("tr"));
-                    var element = $($("#grid").data("kendoGrid").current()[0]).closest("tr").attr("data-uid");
+                    var element = grid.uid;// $($("#grid").data("kendoGrid").current()[0]).closest("tr").attr("data-uid");
                     grid.pricePerUnit = parseFloat(dataItem.amount).toFixed(2);
                     grid.quantity = parseFloat(1).toFixed(0);
+                    grid.uoMId = dataItem.uoMId;
 
                     var total = grid.pricePerUnit * grid.quantity;
 
                     $("#grid").find("tr[data-uid='" + element + "'] td:eq(3)").text(parseFloat(dataItem.amount).toFixed(2));
-                    $("#grid").find("tr[data-uid='" + element + "'] td:eq(4)").text(grid.quantity);
-                    $("#grid").find("tr[data-uid='" + element + "'] td:eq(6)").text(parseFloat(total).toFixed(2));
+                    $("#grid").find("tr[data-uid='" + element + "'] td:eq(6)").text(grid.quantity);
+                    $("#grid").find("tr[data-uid='" + element + "'] td:eq(5)").text(parseFloat(total).toFixed(2));
+                    $("#grid").find("tr[data-uid='" + element + "'] td:eq(7)").text(parseFloat(total).toFixed(2));
 
                     grid.extendedAmount = parseFloat(total).toFixed(2);
 
@@ -761,8 +821,8 @@
 
                 switch (val) {
                     case 1: label = "Open"; break;
-                    case 2: label = "Delievered"; break;
-                    case 3: label = "Canceled"; break;
+                    case 2: label = "Delivered"; break;
+                    case 3: label = "Cancelled"; break;
                     default: label = ""; break;
 
                 }

@@ -2,9 +2,169 @@
 <html>
 <head>
     <title></title>
-	<meta charset="utf-8" />
+    <meta charset="utf-8" />
+
+    <title></title>
+    <link rel="stylesheet" href="/WebResources/dyna_/css/kendo.common.min.css" />
+    <!--<link rel="stylesheet" href="/WebResources/dyna_/css/kendo.common.min.css" />-->
+    <link rel="stylesheet" href="/WebResources/dyna_/css/kendo.bootstrapv4.min.css" />
+    <link rel="stylesheet" href="/WebResources/dyna_/css/bootstrap.min.css" />
+    <!--<link rel="stylesheet" href="/WebResources/dyna_/css/kendo.common.min.css" />-->
+    <!--<link rel="stylesheet" href="/WebResources/dyna_/css/kendo.bootstrap.min.css" />-->
+    <!--<link rel="stylesheet" href="/WebResources/dyna_/css/kendo.common.min.css" />-->
+    <!--<link rel="stylesheet" href="css/kendo.default.mobile.min.css" />-->
+
+    <script src="/WebResources/ClientGlobalContext.js.aspx" type="text/javascript"></script>
+    <script src="/WebResources/dyna_/scripts/jquery.min.js"></script>
+    <script src="/WebResources/dyna_/scripts/json2.js"></script>
+    <script src="/WebResources/dyna_/scripts/kendo.all.min.js"></script>
+
+    <style>
+        body {
+            font-family: Segoe UI,Tahoma,Arial;
+            font-weight: normal;
+            font-size: 11px;
+        }
+
+        .toolbar {
+            float: right;
+        }
+
+        .k-button {
+            font-size: 11px;
+        }
+
+        .k-grid-delete {
+            padding: 0;
+        }
+
+        .k-input {
+            font-size: 11px;
+        }
+
+        .k-block {
+            font-size: 11px;
+        }
+
+        .k-widget {
+            font-size: 11px;
+        }
+
+        .k-grid td {
+            padding: .5rem;
+        }
+
+        .resource{
+            background-color: #666;
+            color: #fff;
+        }
+
+        .resource h3{
+            padding:5px 8px;
+        }
+
+        .listEquipment li{
+            float:right;
+            list-style-type: none;
+            padding:5px;
+        }
+
+    </style>
 </head>
 <body>
+    <div class="demo-section k-content wide">
+        <div id="listView"></div>
+        <div id="pager" class="k-pager-wrap"></div>
+    </div>
 
+    <script type="text/x-kendo-template" id="template">
+        <div class="resource">
+            <h3>#:Resource.Name#</h3>
+        </div>
+        <div class="row">
+                <ul id="listview" class="listEquipment ra-well-overlay row k-widget k-listview" data-role="listview" role="listbox">
+                    # for (var i = 0; i < Equipments.length; i++) { #
+                    <li>#= Equipments[i].Name #</li>
+                    # } #
+                </ul>
+        </div>
+    </script>
+
+    <script>
+        $(function () {
+
+            var ctx = GetCrmContext();
+            var serverUrl = location.protocol + "//" + location.host;
+
+            var dataSource = new kendo.data.DataSource({
+                transport: {
+                    read: function (options) {
+                        $.ajax({
+                            type: "GET",
+                            contentType: "application/json; charset=utf-8",
+                            datatype: "json",
+                            url: serverUrl + "/XRMServices/2011/OrganizationData.svc/BookableResourceBookingSet?$select=BookableResourceBookingId,BookingType,dyna_ParentBooking,dyna_TableArrangementId,Name,new_dyna_booking,Resource,dyna_bookableresourcebooking_dyna_bookingequip/dyna_Amount,dyna_bookableresourcebooking_dyna_bookingequip/dyna_bookingequipmentId,dyna_bookableresourcebooking_dyna_bookingequip/dyna_EquipmentId,dyna_bookableresourcebooking_dyna_bookingequip/dyna_name&$expand=dyna_bookableresourcebooking_dyna_bookingequip&$filter=new_dyna_booking/Id eq (guid'761FE0CE-1DC6-E711-80ED-1458D043A400') or dyna_ParentBooking/Id eq (guid'761FE0CE-1DC6-E711-80ED-1458D043A400')",
+                            beforeSend: function (XMLHttpRequest) {
+                                XMLHttpRequest.setRequestHeader("Accept", "application/json");
+                            },
+                            async: true,
+                            success: function (data, textStatus, xhr) {
+                                var results = data.d.results;
+                                var resultOpp = [];
+                                var resultEquip = [];
+                                for (var i = 0; i < results.length; i++) {
+
+                                    var resultItem = {};                                    
+                                    resultItem.BookableResourceBookingId = results[i].BookableResourceBookingId;
+                                    resultItem.BookingType = results[i].BookingType;
+                                    resultItem.ParentBooking = results[i].dyna_ParentBooking;
+                                    resultItem.TableArrangementId = results[i].dyna_TableArrangementId;
+                                    resultItem.Name = results[i].Name;
+                                    resultItem.Booking = results[i].new_dyna_booking;
+                                    resultItem.Resource = results[i].Resource;
+
+                                    for (var a = 0; a < results[i].dyna_bookableresourcebooking_dyna_bookingequip.results.length; a++) {
+                                        var equipment = {};
+                                        equipment.Amount = results[i].dyna_bookableresourcebooking_dyna_bookingequip.results[a].dyna_Amount;
+                                        equipment.EquipmentId = results[i].dyna_bookableresourcebooking_dyna_bookingequip.results[a].dyna_EquipmentId;
+                                        equipment.BookingequipmentId = results[i].dyna_bookableresourcebooking_dyna_bookingequip.results[a].dyna_bookingequipmentId;
+                                        equipment.Name = results[i].dyna_bookableresourcebooking_dyna_bookingequip.results[a].dyna_name;
+                                        resultEquip.push(equipment);
+                                    }
+
+                                    resultItem.Equipments = resultEquip;
+                                    resultOpp.push(resultItem);
+                                }
+
+                                options.success(resultOpp);
+                            },
+                            error: function (xhr, textStatus, errorThrown) {
+                                Xrm.Utility.alertDialog(textStatus + " " + errorThrown);
+                            }
+                        });
+                    }
+                }
+            });
+
+            function GetCrmContext() {
+                var errorMessage = "Context is not available.";
+                if (typeof GetGlobalContext != "undefined")
+                { return GetGlobalContext(); }
+                else
+                {
+                    if (typeof Xrm != "undefined") {
+                        return Xrm.Page.context;
+                    }
+                    else { throw new Error(errorMessage); }
+                }
+            }
+
+
+            $("#listView").kendoListView({
+                dataSource: dataSource,
+                template: kendo.template($("#template").html())
+            });
+        });
+    </script>
 </body>
 </html>

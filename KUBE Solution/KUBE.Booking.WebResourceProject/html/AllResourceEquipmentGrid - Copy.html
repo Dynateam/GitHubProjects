@@ -1,0 +1,464 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <title></title>
+    <meta charset="utf-8" />
+
+    <title></title>
+    <link rel="stylesheet" href="/WebResources/dyna_/css/kendo.common.min.css" />
+    <!--<link rel="stylesheet" href="/WebResources/dyna_/css/kendo.common.min.css" />-->
+    <link rel="stylesheet" href="/WebResources/dyna_/css/kendo.bootstrapv4.min.css" />
+    <!--<link rel="stylesheet" href="/WebResources/dyna_/css/kendo.common.min.css" />-->
+    <!--<link rel="stylesheet" href="/WebResources/dyna_/css/kendo.bootstrap.min.css" />-->
+    <!--<link rel="stylesheet" href="/WebResources/dyna_/css/kendo.common.min.css" />-->
+    <!--<link rel="stylesheet" href="css/kendo.default.mobile.min.css" />-->
+
+    <script src="/WebResources/ClientGlobalContext.js.aspx" type="text/javascript"></script>
+    <script src="/WebResources/dyna_/scripts/jquery.min.js"></script>
+    <script src="/WebResources/dyna_/scripts/json2.js"></script>
+    <script src="/WebResources/dyna_/scripts/kendo.all.min.js"></script>
+
+    <style>
+        body {
+            font-family: Segoe UI,Tahoma,Arial;
+            font-weight: normal;
+            font-size: 11px;
+        }
+
+        #btnExistProduct {
+            vertical-align: middle;
+            font-size: 11px;
+            float: left;
+        }
+
+        #btnWriteInProduct {
+            vertical-align: middle;
+            font-size: 11px;
+            float: left;
+        }
+
+        /*#opportunityProductDrop {
+            vertical-align: middle;
+            font-size: 11px;
+        }*/
+
+        .refreshBtnContainer {
+            display: inline-block;
+        }
+
+        .toolbar {
+            float: right;
+        }
+
+        .k-button {
+            font-size: 11px;
+        }
+
+        .k-grid-delete {
+            padding: 0;
+        }
+
+        .k-input {
+            font-size: 11px;
+        }
+
+        .k-block {
+            font-size: 11px;
+        }
+
+        .k-widget {
+            font-size: 11px;
+        }
+
+        .k-grid td {
+            padding: .5rem;
+        }
+    </style>
+</head>
+<body>
+    <div id="example">
+
+        <script type="text/x-kendo-tmpl" id="listViewSkibsTyperTemplate">
+            <div id="#:Id#" onclick="ShowAndHideKategories(this)" data="Skib" expand="false" class="row SkibsTypeSection">
+                <div class="col-md-1 col-xs-1">
+                    <img id="img_#:Id#" width="24" src="@Url.Content(" ~/Images/expand.png")")" />
+                </div>
+                <div class="col-md-10 col-xs-9">
+                    #: SkibsTypeName#
+                </div>
+            </div>
+            <div id="gridSection_#:Id#" class="gridSection">
+                <div>
+                    @(Html.Kendo().Grid<StoettepunktsKategorymodel>
+                        ()
+                        .Name("grid_cat_#=Id#")
+                        .Columns(columns =>
+                        {
+                        columns.Bound(o => o.CategoryName).Title("Kategorier");
+                        })
+                        .DataSource(dataSource => dataSource
+                        .Ajax()
+                        .Read(read => read.Action("GetStoettepunktsKategorier_Read", "Stoettepunkt", new { typeId = "#=Id#", type = "Skibe" })).ServerOperation(true)
+                        )
+                        .Events(e => e.DetailExpand("ShowAndHide"))
+                        .ClientDetailTemplateId("listViewStoettepunkterTemplate")
+                        .ToClientTemplate()
+                        )
+                </div>
+            </div>
+        </script>
+
+
+        <script type="text/x-kendo-tmpl" id="listViewAdressatTyperTemplate">
+            <div id="#:Id#" onclick="ShowAndHideKategories(this)" data="Adressat" expand="false" class="row SkibsTypeSection">
+                <div class="col-md-1 col-xs-1">
+                    <img id="img_#:Id#" width="24" src="@Url.Content(" ~/Images/expand.png")" />
+                </div>
+                <div class="col-md-10 col-xs-9">
+                    #: AdressatTypeName#
+                </div>
+            </div>
+            <div id="gridSection_#:Id#" class="gridSection">
+                <div>
+                    @(Html.Kendo().Grid<StoettepunktsKategorymodel>
+                        ()
+                        .Name("grid_cat_#=Id#")
+                        .Columns(columns =>
+                        {
+                        columns.Bound(o => o.CategoryName).Title("Kategorier");
+                        })
+                        .DataSource(dataSource => dataSource
+                        .Ajax()
+                        .Read(read => read.Action("GetStoettepunktsKategorier_Read", "Stoettepunkt", new { typeId = "#=Id#", type = "Adressat" })).ServerOperation(true)
+                        )
+                        .Events(e => e.DetailExpand("ShowAndHide"))
+                        .ClientDetailTemplateId("listViewStoettepunkterTemplate")
+                        .ToClientTemplate()
+                        )
+                </div>
+            </div>
+        </script>
+
+        <script type="text/x-kendo-tmpl" id="listViewStoettepunkterTemplate">
+            <div>
+                <div class="subGrid" id="grid_cat_#:CategoryId#_type_#:TypeId#"></div>
+            </div>
+        </script>
+
+        <div>
+            <div class="headerSection">
+                <h2>
+                    Skibe
+                </h2>
+            </div>
+            @(Html.Kendo().ListView<SkibsAndAdressatTypeModel>
+                ()
+                .Name("listViewSkibsTyper")
+                .TagName("div")
+                .ClientTemplateId("listViewSkibsTyperTemplate")
+                .DataSource(dataSource =>
+                {
+                dataSource.Read(read => read.Action("GetAllSkibsTyper_Read", "Stoettepunkt"));
+                })
+                )
+        </div>
+
+
+        <div id="grid"></div>
+
+        <script>
+            $(document).ready(function () {
+
+                //var isDateField = [];
+                //$.ajax({
+                //    url: "https://www.mocky.io/v2/5835e736110000020e0c003c",
+                //    dataType: "jsonp",
+                //    success: function (result) {
+                //        generateGrid(result);
+                //    }
+                //});
+
+                function generateGrid(response) {
+                    var model = generateModel(response);
+                    var columns = generateColumns(response);
+
+                    var grid = $("#grid").kendoGrid({
+                        dataSource: {
+                            transport: {
+                                read: function (options) {
+                                    options.success(response.data);
+                                }
+                            },
+                            pageSize: 5,
+                            schema: {
+                                model: model
+                            }
+                        },
+                        columns: columns,
+                        pageable: true,
+                        editable: true
+                    });
+                }
+
+                function generateColumns(response) {
+                    var columnNames = response["columns"];
+                    return columnNames.map(function (name) {
+                        return { field: name, format: (isDateField[name] ? "{0:D}" : "") };
+                    })
+                }
+
+                function generateModel(response) {
+
+                    var sampleDataItem = response["data"][0];
+
+                    var model = {};
+                    var fields = {};
+                    for (var property in sampleDataItem) {
+                        if (property.indexOf("ID") !== -1) {
+                            model["id"] = property;
+                        }
+                        var propType = typeof sampleDataItem[property];
+
+                        if (propType === "number") {
+                            fields[property] = {
+                                type: "number",
+                                validation: {
+                                    required: true
+                                }
+                            };
+                            if (model.id === property) {
+                                fields[property].editable = false;
+                                fields[property].validation.required = false;
+                            }
+                        } else if (propType === "boolean") {
+                            fields[property] = {
+                                type: "boolean"
+                            };
+                        } else if (propType === "string") {
+                            var parsedDate = kendo.parseDate(sampleDataItem[property]);
+                            if (parsedDate) {
+                                fields[property] = {
+                                    type: "date",
+                                    validation: {
+                                        required: true
+                                    }
+                                };
+                                isDateField[property] = true;
+                            } else {
+                                fields[property] = {
+                                    validation: {
+                                        required: true
+                                    }
+                                };
+                            }
+                        } else {
+                            fields[property] = {
+                                validation: {
+                                    required: true
+                                }
+                            };
+                        }
+                    }
+
+                    model.fields = fields;
+
+                    return model;
+                }
+
+
+                function GetData() {
+                    $.ajax({
+                        type: "GET",
+                        contentType: "application/json; charset=utf-8",
+                        datatype: "json",
+                        url: Xrm.Page.context.getClientUrl() + "/XRMServices/2011/OrganizationData.svc/BookableResourceBookingSet?$select=BookingType,Resource,dyna_bookableresourcebooking_dyna_bookingequip/dyna_Amount,dyna_bookableresourcebooking_dyna_bookingequip/dyna_BookableResourceBookingId,dyna_bookableresourcebooking_dyna_bookingequip/dyna_bookingequipmentId,dyna_bookableresourcebooking_dyna_bookingequip/dyna_EquipmentId,dyna_bookableresourcebooking_dyna_bookingequip/dyna_name,dyna_bookableresourcebooking_dyna_bookingequip/dyna_UseEquipmentAs&$expand=dyna_bookableresourcebooking_dyna_bookingequip&$filter=new_dyna_booking/Id eq (guid'761FE0CE-1DC6-E711-80ED-1458D043A400') or dyna_ParentBooking/Id eq (guid'761FE0CE-1DC6-E711-80ED-1458D043A400')",
+                        beforeSend: function (XMLHttpRequest) {
+                            XMLHttpRequest.setRequestHeader("Accept", "application/json");
+                        },
+                        async: true,
+                        success: function (data, textStatus, xhr) {
+                            var results = data.d.results;
+                            debugger
+                            GenerateStoetteGrid(results);
+
+                            //for (var i = 0; i < results.length; i++) {
+                            //    var bookingType = results[i].BookingType;
+                            //    var resource = results[i].Resource;
+                            //    for (var a = 0; a < results[i].dyna_bookableresourcebooking_dyna_bookingequip.results.length; a++) {
+                            //        var dyna_bookableresourcebooking_dyna_bookingequip_dyna_Amount = results[i].dyna_bookableresourcebooking_dyna_bookingequip.results[a].dyna_Amount;
+                            //        var dyna_bookableresourcebooking_dyna_bookingequip_dyna_BookableResourceBookingId = results[i].dyna_bookableresourcebooking_dyna_bookingequip.results[a].dyna_BookableResourceBookingId;
+                            //        var dyna_bookableresourcebooking_dyna_bookingequip_dyna_EquipmentId = results[i].dyna_bookableresourcebooking_dyna_bookingequip.results[a].dyna_EquipmentId;
+                            //        var dyna_bookableresourcebooking_dyna_bookingequip_dyna_UseEquipmentAs = results[i].dyna_bookableresourcebooking_dyna_bookingequip.results[a].dyna_UseEquipmentAs;
+                            //        var dyna_bookableresourcebooking_dyna_bookingequip_dyna_bookingequipmentId = results[i].dyna_bookableresourcebooking_dyna_bookingequip.results[a].dyna_bookingequipmentId;
+                            //        var dyna_bookableresourcebooking_dyna_bookingequip_dyna_name = results[i].dyna_bookableresourcebooking_dyna_bookingequip.results[a].dyna_name;
+                            //    }
+                            //}
+                        },
+                        error: function (xhr, textStatus, errorThrown) {
+                            Xrm.Utility.alertDialog(textStatus + " " + errorThrown);
+                        }
+                    });
+                }
+
+
+
+                var dateFields = [];
+
+                function GenerateStoetteGrid(results) {
+
+                    col = [];
+
+                    var json = '[';
+                    for (var i = 0; i < results.length; i++) {
+
+                        json += '{"ResourceName":"' + results[i].Resource.Name + '", "ResourceId":"' + results[i].Resource.Id + '",';
+
+                        var equipments = results[i].dyna_bookableresourcebooking_dyna_bookingequip.results;
+
+                        for (var a = 0; a < equipments.length; a++) {
+
+                            json += '"' + equipments[a].dyna_EquipmentId.Name.replace(/\s[&\/\\#,+()$~%.'":*?<>{}-] | /g, '').replace('/', '').replace(',', '') + '":true, "dyna_BookableResourceBookingId":"' + equipments[a].dyna_BookableResourceBookingId + '"';
+
+                            if (a != equipments.length - 1)
+                                json += ',';
+                        }
+
+                        json += '}';
+
+
+                        if (i != results.length - 1)
+                            json += ',';
+
+                    }
+
+                    json += ']';
+                    var obj = JSON.parse(json);
+
+                    var objData = obj[0];
+                    for (var property in objData) {
+
+                        var prop = objData[property];
+                        var propType = typeof objData[property];
+
+                        if (property != "dyna_BookableResourceBookingId") {
+                            if (property != "ResourceId"){
+                                if (property == "ResourceName") {
+                                    col.push({
+                                        field: property,
+                                        title: "Resource",
+                                        locked: false,
+                                        width: 250
+                                    });
+                                }
+                                else {
+
+                                    var chk = prop;
+                                    var checked = "";
+
+                                    col.push({
+                                        field: property,
+                                        title: property,
+                                        locked: true,
+                                        template: '<input type="checkbox" class="ob-paid" checked="checked"></input>',
+                                        width: 250
+                                    });
+                                    //}
+                                }
+                            }
+                        }
+                    }
+
+                    GenerateGrid(obj, "grid", col);
+
+
+                }
+
+                function GenerateGrid(gridData, id, col) {
+                    var model = GenerateModel(gridData[0]);
+
+                    var grid = $("#" + id).kendoGrid({
+                        dataSource: {
+                            data: gridData,
+                            schema: {
+                                model: model,
+                                //parse: parseFunction
+                            }
+                        },
+                        columns: col,
+                        navigatable: true,
+                        editable: true
+                    });
+
+                    //grid.bind("change", grid_change);
+                }
+
+                function GenerateModel(gridData) {
+                    var model = {};
+                    model.id = "ID";
+                    var fields = {};
+                    for (var property in gridData) {
+                        var propType = typeof gridData[property];
+                        if (propType == "number") {
+                            fields[property] = {
+                                type: "number",
+                                validation: {
+                                    required: false
+                                }
+                            };
+                        } else if (propType == "boolean") {
+                            fields[property.replace('-', '')] = {
+                                type: "boolean",
+                                field: property.replace('-', ''),
+                                title: property
+                            };
+                        } else if (propType == "string") {
+                            var parsedDate = kendo.parseDate(gridData[property]);
+                            if (parsedDate) {
+                                fields[property] = {
+                                    type: "date",
+                                    validation: {
+                                        required: false
+                                    }
+                                };
+                                dateFields.push(property);
+                            } else {
+                                if (property == "ResourceName") {
+                                    fields[property.replace('-', '')] = {
+                                        type: "string",
+                                        //title: gridData.Label,
+                                        editable: false,
+                                        validation: {
+                                            required: false
+                                        }
+                                    };
+                                } else {
+                                    fields[property.replace('-', '')] = {
+                                        type: "string",
+                                        editable: false,
+                                        validation: {
+                                            required: false
+                                        }
+                                    };
+                                }
+                            }
+                        } else {
+                            fields[property] = {
+                                validation: {
+                                    required: false
+                                }
+                            };
+                        }
+
+                    }
+                    model.fields = fields;
+
+                    return model;
+                }
+
+
+                GetData();
+            });
+        </script>
+    </div>
+</body>
+</html>
