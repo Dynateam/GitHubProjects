@@ -111,7 +111,8 @@
             var parameters = GetGlobalContext().getQueryStringParameters();
 
             var opportynityId = parameters.id != undefined ? parameters.id : "2561A578-9813-E711-9D4A-005056BE4EEC";
-            var priceLevelId = window.parent.Xrm.Page.getAttribute("pricelevelid") != null ? window.parent.Xrm.Page.getAttribute("pricelevelid").getValue()[0].id : "3ED0C142-7CFB-E311-A1B8-005056AD7E30";
+            var priceLevelId = window.parent.Xrm.Page.getAttribute("pricelevelid").getValue() != null ? window.parent.Xrm.Page.getAttribute("pricelevelid").getValue()[0].id : "3ED0C142-7CFB-E311-A1B8-005056AD7E30";
+            priceLevelId = priceLevelId.replace("{", "").replace("}", "");
             var oumId = "5F4EFA02-9DEF-4FFA-BC89-E086D690B614";
 
             var ParseParameters = function (Query) {
@@ -149,7 +150,7 @@
                                 type: "GET",
                                 contentType: "application/json; charset=utf-8",
                                 datatype: "json",
-                                url: serverUrl + "/XRMServices/2011/OrganizationData.svc/OpportunityProductSet?$select=UoMId,dyna_CustomerPrice,BaseAmount,Description,ProductDescription,dyna_ExpectedDeliveryDate,dyna_Status,ExtendedAmount,IsPriceOverridden,IsProductOverridden,ManualDiscountAmount,OpportunityId,OpportunityProductId,PricePerUnit,ProductDescription,ProductId,ProductTypeCode,Quantity&$filter=OpportunityId/Id eq (guid'" + opportynityId + "')",
+                                url: serverUrl + "/XRMServices/2011/OrganizationData.svc/OpportunityProductSet?$select=UoMId,dyna_CustomerPrice,BaseAmount,Description,ProductDescription,dyna_ExpectedDeliveryDate,dyna_Status,ExtendedAmount,IsPriceOverridden,IsProductOverridden,ManualDiscountAmount,OpportunityId,OpportunityProductId,PricePerUnit,ProductDescription,ProductId,ProductTypeCode,Quantity&$filter=OpportunityId/Id eq (guid'" + opportynityId + "')&$orderby=dyna_ExpectedDeliveryDate desc",
                                 beforeSend: function (XMLHttpRequest) {
                                     XMLHttpRequest.setRequestHeader("Accept", "application/json");
                                 },
@@ -742,47 +743,95 @@
                         //serverFiltering: true,
                         transport: {
                             read: function (option) {
-                                $.ajax({
-                                    type: "GET",
-                                    contentType: "application/json; charset=utf-8",
-                                    datatype: "json",
-                                    url: Xrm.Page.context.getClientUrl() + "/XRMServices/2011/OrganizationData.svc/ProductPriceLevelSet?$select=UoMId,UoMScheduleId,Amount,PriceLevelId,ProductId,product_price_levels/Name,product_price_levels/ProductId&$expand=product_price_levels&$filter=PriceLevelId/Id eq (guid'" + priceLevelId + "')",
-                                    beforeSend: function (XMLHttpRequest) {
-                                        XMLHttpRequest.setRequestHeader("Accept", "application/json");
-                                    },
-                                    success: function (data, textStatus, xhr) {
-                                        var results = data.d.results;
-                                        var resultPro = [];
+                                //$.ajax({
+                                //    type: "GET",
+                                //    contentType: "application/json; charset=utf-8",
+                                //    datatype: "json",
+                                //    url: Xrm.Page.context.getClientUrl() + "/XRMServices/2011/OrganizationData.svc/ProductPriceLevelSet?$select=UoMId,UoMScheduleId,Amount,PriceLevelId,ProductId,product_price_levels/Name,product_price_levels/ProductId&$expand=product_price_levels&$filter=PriceLevelId/Id eq (guid'" + priceLevelId + "')&$orderby=ProductId asc",
+                                //    beforeSend: function (XMLHttpRequest) {
+                                //        XMLHttpRequest.setRequestHeader("Accept", "application/json");
+                                //    },
+                                //    success: function (data, textStatus, xhr) {
+                                //        var results = data.d.results;
+                                //        var resultPro = [];
 
-                                        for (var i = 0; i < results.length; i++) {
-                                            var amount = results[i].Amount;
-                                            var priceLevelId = results[i].PriceLevelId;
-                                            var productId = results[i].ProductId;
-                                            var uoMId = results[i].UoMId;
-                                            var uoMScheduleId = results[i].UoMScheduleId;
-                                            var product_price_levels_Name = results[i].product_price_levels.Name;
-                                            var product_price_levels_ProductId = results[i].product_price_levels.ProductId;
+                                //        for (var i = 0; i < results.length; i++) {
+                                //            var amount = results[i].Amount;
+                                //            var priceLevelId = results[i].PriceLevelId;
+                                //            var productId = results[i].ProductId;
+                                //            var uoMId = results[i].UoMId;
+                                //            var uoMScheduleId = results[i].UoMScheduleId;
+                                //            var product_price_levels_Name = results[i].product_price_levels.Name;
+                                //            var product_price_levels_ProductId = results[i].product_price_levels.ProductId;
 
-                                            var resultItem = {};
-                                            resultItem.uoMId = uoMId != null ? uoMId.Id : "";
-                                            resultItem.uoMScheduleId = uoMScheduleId;
-                                            resultItem.productIdName = productId.Name;
-                                            resultItem.productId = productId.Id;
-                                            resultItem.amount = amount.Value;
-                                            resultPro.push(resultItem);
-                                        }
+                                //            var resultItem = {};
+                                //            resultItem.uoMId = uoMId != null ? uoMId.Id : "";
+                                //            resultItem.uoMScheduleId = uoMScheduleId;
+                                //            resultItem.productIdName = productId.Name;
+                                //            resultItem.productId = productId.Id;
+                                //            resultItem.amount = amount.Value;
+                                //            resultPro.push(resultItem);
+                                //        }
 
-                                        option.success(resultPro);
-                                    },
-                                    error: function (xhr, textStatus, errorThrown) {
-                                        Xrm.Utility.alertDialog(textStatus + " " + errorThrown);
-                                    }
-                                });
+                                //        option.success(resultPro);
+
+                                //    },
+                                //    error: function (xhr, textStatus, errorThrown) {
+                                //        Xrm.Utility.alertDialog(textStatus + " " + errorThrown);
+                                //    }
+                                //});
+
+                                option.success(resultPro);
                             }
                         }
                     }
                 });
             }
+
+            var productOdataUrl = Xrm.Page.context.getClientUrl() + "/XRMServices/2011/OrganizationData.svc/ProductPriceLevelSet?$select=UoMId,UoMScheduleId,Amount,PriceLevelId,ProductId,product_price_levels/Name,product_price_levels/ProductId&$expand=product_price_levels&$filter=PriceLevelId/Id eq (guid'" + priceLevelId + "')&$orderby=ProductId asc";
+            var resultPro = [];
+            var DatasourceProduct = function () {
+                
+                $.ajax({
+                    type: "GET",
+                    contentType: "application/json; charset=utf-8",
+                    datatype: "json",
+                    url: productOdataUrl,
+                    beforeSend: function (XMLHttpRequest) {
+                        XMLHttpRequest.setRequestHeader("Accept", "application/json");
+                    },
+                    success: function (data, textStatus, xhr) {
+                        var results = data.d.results;
+                        
+
+                        for (var i = 0; i < results.length; i++) {
+                            var amount = results[i].Amount;
+                            var priceLevelId = results[i].PriceLevelId;
+                            var productId = results[i].ProductId;
+                            var uoMId = results[i].UoMId;
+                            var uoMScheduleId = results[i].UoMScheduleId;
+                            var product_price_levels_Name = results[i].product_price_levels.Name;
+                            var product_price_levels_ProductId = results[i].product_price_levels.ProductId;
+
+                            var resultItem = {};
+                            resultItem.uoMId = uoMId != null ? uoMId.Id : "";
+                            resultItem.uoMScheduleId = uoMScheduleId;
+                            resultItem.productIdName = productId.Name;
+                            resultItem.productId = productId.Id;
+                            resultItem.amount = amount.Value;
+                            resultPro.push(resultItem);
+                        }
+
+                        if (data.d.__next != null) {
+                            productOdataUrl = data.d.__next;
+                            DatasourceProduct();
+                        }
+                    }
+                })
+            }
+
+            DatasourceProduct();
+
 
             function onChangeProduct(e) {
                 //var value = $(e).val();
