@@ -814,7 +814,7 @@
                 });
             }
 
-            var productOdataUrl = Xrm.Page.context.getClientUrl() + "/XRMServices/2011/OrganizationData.svc/ProductPriceLevelSet?$select=UoMId,UoMScheduleId,Amount,PriceLevelId,ProductId,product_price_levels/Name,product_price_levels/ProductId&$expand=product_price_levels&$filter=PriceLevelId/Id eq (guid'" + priceLevelId + "')&$orderby=ProductId asc";
+            var productOdataUrl = Xrm.Page.context.getClientUrl() + "/XRMServices/2011/OrganizationData.svc/ProductPriceLevelSet?$select=UoMId,UoMScheduleId,Amount,PriceLevelId,ProductId,product_price_levels/Name,product_price_levels/ProductId,product_price_levels/StateCode&$expand=product_price_levels&$filter=PriceLevelId/Id eq (guid'" + priceLevelId + "')&$orderby=ProductId asc";
             var resultPro = [];
             var DatasourceProduct = function () {
 
@@ -838,14 +838,17 @@
                             var uoMScheduleId = results[i].UoMScheduleId;
                             var product_price_levels_Name = results[i].product_price_levels.Name;
                             var product_price_levels_ProductId = results[i].product_price_levels.ProductId;
+                            var product_price_levels_StateCode = results[i].product_price_levels.StateCode;
 
-                            var resultItem = {};
-                            resultItem.uoMId = uoMId != null ? uoMId.Id : "";
-                            resultItem.uoMScheduleId = uoMScheduleId;
-                            resultItem.productIdName = productId.Name;
-                            resultItem.productId = productId.Id;
-                            resultItem.amount = amount.Value;
-                            resultPro.push(resultItem);
+                            if (product_price_levels_StateCode.Value == 0) {
+                                var resultItem = {};
+                                resultItem.uoMId = uoMId != null ? uoMId.Id : "";
+                                resultItem.uoMScheduleId = uoMScheduleId;
+                                resultItem.productIdName = productId.Name;
+                                resultItem.productId = productId.Id;
+                                resultItem.amount = amount.Value;
+                                resultPro.push(resultItem);
+                            }
                         }
 
                         if (data.d.__next != null) {
