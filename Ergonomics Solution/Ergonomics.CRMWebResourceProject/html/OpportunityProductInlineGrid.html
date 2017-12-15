@@ -102,6 +102,12 @@
         </script>
 
         <div id="grid"></div>
+        <div id="noData" style="display:none; background: rgba(0, 0, 0, 0.5); border-image: none; width: 100%; height: 310px; text-align: center; font-size: 2em; margin-top: -300px; position: absolute;">
+            <div style="background: rgb(255, 255, 255); margin: 90px auto auto; padding: 30px; border: 2px solid rgb(0, 0, 0); border-image: none; width: 10%; text-align: center;">
+                No data...
+                
+            </div>
+        </div>
 
         <script>
 
@@ -110,9 +116,12 @@
 
             var parameters = GetGlobalContext().getQueryStringParameters();
 
-            var opportynityId = parameters.id != undefined ? parameters.id : "2561A578-9813-E711-9D4A-005056BE4EEC";
-            var priceLevelId = window.parent.Xrm.Page.getAttribute("pricelevelid").getValue() != null ? window.parent.Xrm.Page.getAttribute("pricelevelid").getValue()[0].id : "3ED0C142-7CFB-E311-A1B8-005056AD7E30";
-            priceLevelId = priceLevelId.replace("{", "").replace("}", "");
+            var opportynityId = window.parent.Xrm.Page.data.entity.getId();// != "" ? parameters.id : ""; //"2561A578-9813-E711-9D4A-005056BE4EEC";
+            var priceLevelId = window.parent.Xrm.Page.getAttribute("pricelevelid").getValue() != null ? window.parent.Xrm.Page.getAttribute("pricelevelid").getValue()[0].id : ""; //"3ED0C142-7CFB-E311-A1B8-005056AD7E30";
+
+            if (priceLevelId != "") {
+                priceLevelId = priceLevelId.replace("{", "").replace("}", "");
+            }
             var oumId = "5F4EFA02-9DEF-4FFA-BC89-E086D690B614";
 
             var ParseParameters = function (Query) {
@@ -143,308 +152,315 @@
                 var ctx = GetCrmContext();
                 var serverUrl = location.protocol + "//" + location.host;
 
-                var dataSource = new kendo.data.DataSource({
-                    transport: {
-                        read: function (options) {
-                            $.ajax({
-                                type: "GET",
-                                contentType: "application/json; charset=utf-8",
-                                datatype: "json",
-                                url: serverUrl + "/XRMServices/2011/OrganizationData.svc/OpportunityProductSet?$select=UoMId,dyna_CustomerPrice,BaseAmount,Description,ProductDescription,dyna_ExpectedDeliveryDate,dyna_Status,ExtendedAmount,IsPriceOverridden,IsProductOverridden,ManualDiscountAmount,OpportunityId,OpportunityProductId,PricePerUnit,ProductDescription,ProductId,ProductTypeCode,Quantity&$filter=OpportunityId/Id eq (guid'" + opportynityId + "')&$orderby=dyna_ExpectedDeliveryDate desc",
-                                beforeSend: function (XMLHttpRequest) {
-                                    XMLHttpRequest.setRequestHeader("Accept", "application/json");
-                                },
-                                async: true,
-                                success: function (data, textStatus, xhr) {
-                                    var results = data.d.results;
-                                    var resultOpp = [];
-                                    for (var i = 0; i < results.length; i++) {
-                                        var dyna_Status = results[i].dyna_Status;
-                                        var baseAmount = results[i].BaseAmount;
-                                        var description = results[i].Description;
-                                        var isPriceOverridden = results[i].IsPriceOverridden;
-                                        var isProductOverridden = results[i].IsProductOverridden;
-                                        var dyna_ExpectedDeliveryDate = results[i].dyna_ExpectedDeliveryDate;
-                                        var extendedAmount = results[i].ExtendedAmount;
-                                        var manualDiscountAmount = results[i].ManualDiscountAmount;
-                                        var opportunityId = results[i].OpportunityId;
-                                        var opportunityProductId = results[i].OpportunityProductId;
-                                        var pricePerUnit = results[i].PricePerUnit;
-                                        var productDescription = results[i].ProductDescription;
-                                        var productId = results[i].ProductId;
-                                        var productTypeCode = results[i].ProductTypeCode;
-                                        var quantity = results[i].Quantity;
-                                        var productdescription = results[i].ProductDescription;
-                                        var dyna_CustomerPrice = results[i].dyna_CustomerPrice;
-                                        var uoMId = results[i].UoMId;
+                if (opportynityId != "") {
+                    var dataSource = new kendo.data.DataSource({
+                        transport: {
+                            read: function (options) {
+                                $.ajax({
+                                    type: "GET",
+                                    contentType: "application/json; charset=utf-8",
+                                    datatype: "json",
+                                    url: serverUrl + "/XRMServices/2011/OrganizationData.svc/OpportunityProductSet?$select=UoMId,dyna_CustomerPrice,BaseAmount,Description,ProductDescription,dyna_ExpectedDeliveryDate,dyna_Status,ExtendedAmount,IsPriceOverridden,IsProductOverridden,ManualDiscountAmount,OpportunityId,OpportunityProductId,PricePerUnit,ProductDescription,ProductId,ProductTypeCode,Quantity&$filter=OpportunityId/Id eq (guid'" + opportynityId + "')&$orderby=dyna_ExpectedDeliveryDate desc",
+                                    beforeSend: function (XMLHttpRequest) {
+                                        XMLHttpRequest.setRequestHeader("Accept", "application/json");
+                                    },
+                                    async: true,
+                                    success: function (data, textStatus, xhr) {
+                                        var results = data.d.results;
+                                        var resultOpp = [];
+                                        for (var i = 0; i < results.length; i++) {
+                                            var dyna_Status = results[i].dyna_Status;
+                                            var baseAmount = results[i].BaseAmount;
+                                            var description = results[i].Description;
+                                            var isPriceOverridden = results[i].IsPriceOverridden;
+                                            var isProductOverridden = results[i].IsProductOverridden;
+                                            var dyna_ExpectedDeliveryDate = results[i].dyna_ExpectedDeliveryDate;
+                                            var extendedAmount = results[i].ExtendedAmount;
+                                            var manualDiscountAmount = results[i].ManualDiscountAmount;
+                                            var opportunityId = results[i].OpportunityId;
+                                            var opportunityProductId = results[i].OpportunityProductId;
+                                            var pricePerUnit = results[i].PricePerUnit;
+                                            var productDescription = results[i].ProductDescription;
+                                            var productId = results[i].ProductId;
+                                            var productTypeCode = results[i].ProductTypeCode;
+                                            var quantity = results[i].Quantity;
+                                            var productdescription = results[i].ProductDescription;
+                                            var dyna_CustomerPrice = results[i].dyna_CustomerPrice;
+                                            var uoMId = results[i].UoMId;
 
-                                        var resultItem = {};
-                                        resultItem.uoMId = uoMId != null ? uoMId.Id : "";
-                                        resultItem.baseAmount = baseAmount.Value;
-                                        resultItem.extendedAmount = extendedAmount.Value;
-                                        resultItem.dyna_StatusName = SetStatusLabel(dyna_Status.Value);
-                                        resultItem.dyna_Status = dyna_Status.Value.toString(), //SetStatusLabel(dyna_Status.Value);
-                                        resultItem.currency = valuta,
-                                        resultItem.description = productdescription;
-                                        resultItem.isPriceOverridden = isPriceOverridden;
-                                        resultItem.dyna_ExpectedDeliveryDate = dyna_ExpectedDeliveryDate;
-                                        resultItem.isProductOverridden = isProductOverridden;
-                                        resultItem.manualDiscountAmount = manualDiscountAmount.Value;
-                                        resultItem.opportunityId = opportunityId.Id;
-                                        resultItem.opportunityIdName = opportunityId.Name;
-                                        resultItem.opportunityProductId = opportunityProductId;
-                                        resultItem.pricePerUnit = pricePerUnit.Value;
-                                        resultItem.productDescription = productDescription;
-                                        resultItem.productId = productId != null ? productId.Id : "";
-                                        resultItem.productIdName = productId != null ? productId.Name : "";
-                                        resultItem.productTypeCode = productTypeCode != null ? productTypeCode.Value : null;
-                                        resultItem.quantity = quantity;
-                                        resultItem.dyna_CustomerPrice = dyna_CustomerPrice.Value != null ? dyna_CustomerPrice.Value : Number("0.00");
-                                        resultItem.manualDiscountProcentage = (parseFloat(manualDiscountAmount.Value) / (parseFloat(manualDiscountAmount.Value) + parseFloat(extendedAmount.Value))) * 100;
+                                            var resultItem = {};
+                                            resultItem.uoMId = uoMId != null ? uoMId.Id : "";
+                                            resultItem.baseAmount = baseAmount.Value;
+                                            resultItem.extendedAmount = extendedAmount.Value;
+                                            resultItem.dyna_StatusName = SetStatusLabel(dyna_Status.Value);
+                                            resultItem.dyna_Status = dyna_Status.Value.toString(), //SetStatusLabel(dyna_Status.Value);
+                                            resultItem.currency = valuta,
+                                            resultItem.description = productdescription;
+                                            resultItem.isPriceOverriddenValue = isPriceOverridden ? "2" : "1";
+                                            resultItem.isPriceOverridden = SetPriceLabel(isPriceOverridden);
+                                            resultItem.dyna_ExpectedDeliveryDate = dyna_ExpectedDeliveryDate;
+                                            resultItem.isProductOverridden = isProductOverridden;
+                                            resultItem.manualDiscountAmount = manualDiscountAmount.Value;
+                                            resultItem.opportunityId = opportunityId.Id;
+                                            resultItem.opportunityIdName = opportunityId.Name;
+                                            resultItem.opportunityProductId = opportunityProductId;
+                                            resultItem.pricePerUnit = pricePerUnit.Value;
+                                            resultItem.productDescription = productDescription;
+                                            resultItem.productId = productId != null ? productId.Id : "";
+                                            resultItem.productIdName = productId != null ? productId.Name : "";
+                                            resultItem.productTypeCode = productTypeCode != null ? productTypeCode.Value : null;
+                                            resultItem.quantity = quantity;
+                                            resultItem.dyna_CustomerPrice = dyna_CustomerPrice.Value != null ? dyna_CustomerPrice.Value : Number("0.00");
+                                            resultItem.manualDiscountProcentage = (parseFloat(manualDiscountAmount.Value) / (parseFloat(manualDiscountAmount.Value) + parseFloat(extendedAmount.Value))) * 100;
 
 
-                                        resultOpp.push(resultItem);
+                                            resultOpp.push(resultItem);
+                                        }
+
+                                        options.success(resultOpp);
+                                    },
+                                    error: function (xhr, textStatus, errorThrown) {
+                                        Xrm.Utility.alertDialog(textStatus + " " + errorThrown);
                                     }
+                                });
+                            },
+                            change: function (e) {
+                                alert("change");
+                            },
+                            update: function (options) {
+                                var item = options.data;
 
-                                    options.success(resultOpp);
-                                },
-                                error: function (xhr, textStatus, errorThrown) {
-                                    Xrm.Utility.alertDialog(textStatus + " " + errorThrown);
+                                item.extendedAmount = (parseFloat(item.quantity).toFixed(0) * parseFloat(item.pricePerUnit).toFixed(2)) - parseFloat(item.manualDiscountAmount).toFixed(2);
+
+                                var entity = {};
+
+                                if (item.productId != null) {
+                                    entity.ProductId = {
+                                        Id: item.productId,
+                                        LogicalName: "product"
+                                    };
+
+                                    entity.UoMId = {
+                                        Id: item.uoMId,
+                                        LogicalName: "uom"
+                                    };
+
+
                                 }
-                            });
-                        },
-                        change: function (e) {
-                            alert("change");
-                        },
-                        update: function (options) {
-                            var item = options.data;
 
-                            item.extendedAmount = (parseFloat(item.quantity).toFixed(0) * parseFloat(item.pricePerUnit).toFixed(2)) - parseFloat(item.manualDiscountAmount).toFixed(2);
+                                entity.ProductDescription = item.description != null ? item.description : "";
+                                entity.Quantity = parseFloat(item.quantity).toFixed(0);
 
-                            var entity = {};
+                                if (item.dyna_ExpectedDeliveryDate != "") {
+                                    var d = item.dyna_ExpectedDeliveryDate;
+                                    entity.dyna_ExpectedDeliveryDate = (d.getMonth() + 1) + "/" + d.getDate() + "/" + d.getFullYear();
+                                }
 
-                            if (item.productId != null) {
-                                entity.ProductId = {
-                                    Id: item.productId,
-                                    LogicalName: "product"
+                                //entity.BaseAmount = {
+                                //    Value: parseFloat(item.baseAmount).toFixed(2)
+                                //};
+                                entity.OpportunityId = {
+                                    Id: item.opportunityId,
+                                    LogicalName: "opportunity"
+                                };
+                                entity.IsPriceOverridden = item.IsPriceOverriddenValue == "2" ? true : false;
+                                entity.PricePerUnit = {
+                                    Value: parseFloat(item.pricePerUnit).toFixed(2)
+                                };
+                                entity.ManualDiscountAmount = {
+                                    Value: parseFloat(item.manualDiscountAmount).toFixed(2)
                                 };
 
-                                entity.UoMId = {
-                                    Id: item.uoMId,
-                                    LogicalName: "uom"
+                                entity.dyna_Status = {
+                                    Value: parseInt(item.dyna_Status)
                                 };
 
+                                $.ajax({
+                                    type: "POST",
+                                    contentType: "application/json; charset=utf-8",
+                                    datatype: "json",
+                                    url: serverUrl + "/XRMServices/2011/OrganizationData.svc/OpportunityProductSet(guid'" + item.opportunityProductId + "')",
+                                    data: JSON.stringify(entity),
+                                    beforeSend: function (XMLHttpRequest) {
+                                        XMLHttpRequest.setRequestHeader("Accept", "application/json");
+                                        XMLHttpRequest.setRequestHeader("X-HTTP-Method", "MERGE");
+                                    },
+                                    async: true,
+                                    success: function (data, textStatus, xhr) {
+                                        options.success(item);
 
-                            }
+                                        var grid = $("#grid").data("kendoGrid").dataSource;
+                                        grid.read();
 
-                            entity.ProductDescription = item.description != null ? item.description : "";
-                            entity.Quantity = parseFloat(item.quantity).toFixed(0);
-
-                            if (item.dyna_ExpectedDeliveryDate != "") {
-                                var d = item.dyna_ExpectedDeliveryDate;
-                                entity.dyna_ExpectedDeliveryDate = (d.getMonth() + 1) + "/" + d.getDate() + "/" + d.getFullYear();
-                            }
-
-                            //entity.BaseAmount = {
-                            //    Value: parseFloat(item.baseAmount).toFixed(2)
-                            //};
-                            entity.OpportunityId = {
-                                Id: item.opportunityId,
-                                LogicalName: "opportunity"
-                            };
-                            entity.IsPriceOverridden = item.IsPriceOverridden == true ? true : false;
-                            entity.PricePerUnit = {
-                                Value: parseFloat(item.pricePerUnit).toFixed(2)
-                            };
-                            entity.ManualDiscountAmount = {
-                                Value: parseFloat(item.manualDiscountAmount).toFixed(2)
-                            };
-
-                            entity.dyna_Status = {
-                                Value: parseInt(item.dyna_Status)
-                            };
-
-                            $.ajax({
-                                type: "POST",
-                                contentType: "application/json; charset=utf-8",
-                                datatype: "json",
-                                url: serverUrl + "/XRMServices/2011/OrganizationData.svc/OpportunityProductSet(guid'" + item.opportunityProductId + "')",
-                                data: JSON.stringify(entity),
-                                beforeSend: function (XMLHttpRequest) {
-                                    XMLHttpRequest.setRequestHeader("Accept", "application/json");
-                                    XMLHttpRequest.setRequestHeader("X-HTTP-Method", "MERGE");
-                                },
-                                async: true,
-                                success: function (data, textStatus, xhr) {
-                                    options.success(item);
-
-                                    var grid = $("#grid").data("kendoGrid").dataSource;
-                                    grid.read();
-
-                                    var sum = 0;
-                                    for (var i = 0; i < grid.data().length; i++) {
-                                        sum += grid.data()[i].extendedAmount;
+                                        var sum = 0;
+                                        for (var i = 0; i < grid.data().length; i++) {
+                                            sum += grid.data()[i].extendedAmount;
+                                        }
+                                        window.parent.Xrm.Page.getAttribute("totalamount").setValue(sum);
+                                    },
+                                    error: function (xhr, textStatus, errorThrown) {
+                                        //Xrm.Utility.alertDialog(textStatus + " " + errorThrown);
+                                        $("#grid").data("kendoGrid").dataSource.read();
                                     }
-                                    window.parent.Xrm.Page.getAttribute("totalamount").setValue(sum);
-                                },
-                                error: function (xhr, textStatus, errorThrown) {
-                                    //Xrm.Utility.alertDialog(textStatus + " " + errorThrown);
-                                    $("#grid").data("kendoGrid").dataSource.read();
-                                }
-                            });
+                                });
 
 
-                        },
-                        destroy: function (options) {
+                            },
+                            destroy: function (options) {
 
-                            var item = options.data;
-                            $.ajax({
-                                type: "POST",
-                                contentType: "application/json; charset=utf-8",
-                                datatype: "json",
-                                url: Xrm.Page.context.getClientUrl() + "/XRMServices/2011/OrganizationData.svc/OpportunityProductSet(guid'" + item.opportunityProductId + "')",
-                                beforeSend: function (XMLHttpRequest) {
-                                    XMLHttpRequest.setRequestHeader("Accept", "application/json");
-                                    XMLHttpRequest.setRequestHeader("X-HTTP-Method", "DELETE");
-                                },
-                                async: true,
-                                success: function (data, textStatus, xhr) {
-                                    options.success(item);
+                                var item = options.data;
+                                $.ajax({
+                                    type: "POST",
+                                    contentType: "application/json; charset=utf-8",
+                                    datatype: "json",
+                                    url: Xrm.Page.context.getClientUrl() + "/XRMServices/2011/OrganizationData.svc/OpportunityProductSet(guid'" + item.opportunityProductId + "')",
+                                    beforeSend: function (XMLHttpRequest) {
+                                        XMLHttpRequest.setRequestHeader("Accept", "application/json");
+                                        XMLHttpRequest.setRequestHeader("X-HTTP-Method", "DELETE");
+                                    },
+                                    async: true,
+                                    success: function (data, textStatus, xhr) {
+                                        options.success(item);
 
-                                    var grid = $("#grid").data("kendoGrid").dataSource;
-                                    grid.read();
+                                        var grid = $("#grid").data("kendoGrid").dataSource;
+                                        grid.read();
 
-                                    var sum = 0;
-                                    for (var i = 0; i < grid.data().length; i++) {
-                                        sum += grid.data()[i].extendedAmount;
+                                        var sum = 0;
+                                        for (var i = 0; i < grid.data().length; i++) {
+                                            sum += grid.data()[i].extendedAmount;
+                                        }
+                                        window.parent.Xrm.Page.getAttribute("totalamount").setValue(sum);
+
+                                    },
+                                    error: function (xhr, textStatus, errorThrown) {
+                                        //Xrm.Utility.alertDialog(textStatus + " " + errorThrown);
+                                        $("#grid").data("kendoGrid").dataSource.read();
                                     }
-                                    window.parent.Xrm.Page.getAttribute("totalamount").setValue(sum);
+                                });
+                            },
+                            create: function (options) {
 
-                                },
-                                error: function (xhr, textStatus, errorThrown) {
-                                    //Xrm.Utility.alertDialog(textStatus + " " + errorThrown);
-                                    $("#grid").data("kendoGrid").dataSource.read();
+                                //var value = $("#opportunityProductDrop").val();
+                                var item = options.data;
+
+
+                                item.extendedAmount = (parseFloat(item.quantity).toFixed(0) * parseFloat(item.pricePerUnit).toFixed(2)) - parseFloat(item.manualDiscountAmount).toFixed(2);
+                                item.currency = valuta;
+
+                                var entity = {};
+
+                                if (item.productId != "") {
+                                    entity.ProductId = {
+                                        Id: item.productId,
+                                        LogicalName: "product"
+                                    };
+
+
+                                    entity.UoMId = {
+                                        Id: item.uoMId,
+                                        LogicalName: "uom"
+                                    };
                                 }
-                            });
-                        },
-                        create: function (options) {
 
-                            //var value = $("#opportunityProductDrop").val();
-                            var item = options.data;
+                                entity.ProductDescription = item.description != "" ? item.description : "";
+                                entity.Quantity = parseFloat(item.quantity).toFixed(0);
+                                entity.IsProductOverridden = item.isProductOverridden; // Existing
+                                entity.IsPriceOverridden = item.isPriceOverriddenValue == "2" ? true : false; //Use default
 
+                                if (item.dyna_ExpectedDeliveryDate != "") {
+                                    var d = item.dyna_ExpectedDeliveryDate;
+                                    entity.dyna_ExpectedDeliveryDate = (d.getMonth() + 1) + "/" + d.getDate() + "/" + d.getFullYear();
+                                }
 
-                            item.extendedAmount = (parseFloat(item.quantity).toFixed(0) * parseFloat(item.pricePerUnit).toFixed(2)) - parseFloat(item.manualDiscountAmount).toFixed(2);
-                            item.currency = valuta;
-
-                            var entity = {};
-
-                            if (item.productId != "") {
-                                entity.ProductId = {
-                                    Id: item.productId,
-                                    LogicalName: "product"
+                                //entity.BaseAmount = {
+                                //    Value: parseFloat(item.baseAmount).toFixed(2)
+                                //};
+                                entity.OpportunityId = {
+                                    Id: opportynityId,
+                                    LogicalName: "opportunity"
+                                };
+                                entity.PricePerUnit = {
+                                    Value: parseFloat(item.pricePerUnit).toFixed(2)
+                                };
+                                entity.ManualDiscountAmount = {
+                                    Value: parseFloat(item.manualDiscountAmount).toFixed(2)
                                 };
 
-
-                                entity.UoMId = {
-                                    Id: item.uoMId,
-                                    LogicalName: "uom"
+                                entity.dyna_Status = {
+                                    Value: parseInt(item.dyna_Status)
                                 };
-                            }
 
-                            entity.ProductDescription = item.description != "" ? item.description : "";
-                            entity.Quantity = parseFloat(item.quantity).toFixed(0);
-                            entity.IsProductOverridden = item.isProductOverridden; // Existing
-                            entity.IsPriceOverridden = item.isPriceOverridden; //Use default
+                                $.ajax({
+                                    type: "POST",
+                                    contentType: "application/json; charset=utf-8",
+                                    datatype: "json",
+                                    url: serverUrl + "/XRMServices/2011/OrganizationData.svc/OpportunityProductSet",
+                                    data: JSON.stringify(entity),
+                                    beforeSend: function (XMLHttpRequest) {
+                                        XMLHttpRequest.setRequestHeader("Accept", "application/json");
+                                    },
+                                    async: true,
+                                    success: function (data, textStatus, xhr) {
+                                        var result = data.d;
+                                        var newEntityId = result.OpportunityProductId;
 
-                            if (item.dyna_ExpectedDeliveryDate != "") {
-                                var d = item.dyna_ExpectedDeliveryDate;
-                                entity.dyna_ExpectedDeliveryDate = (d.getMonth() + 1) + "/" + d.getDate() + "/" + d.getFullYear();
-                            }
+                                        //var ddl = $("#opportunityProductDrop").data("kendoDropDownList");
+                                        //ddl.value(-1);
+                                        isDefaultValueAdded = false;
+                                        options.success(item);
+                                        var grid = $("#grid").data("kendoGrid").dataSource;
+                                        grid.read();
 
-                            //entity.BaseAmount = {
-                            //    Value: parseFloat(item.baseAmount).toFixed(2)
-                            //};
-                            entity.OpportunityId = {
-                                Id: opportynityId,
-                                LogicalName: "opportunity"
-                            };
-                            entity.PricePerUnit = {
-                                Value: parseFloat(item.pricePerUnit).toFixed(2)
-                            };
-                            entity.ManualDiscountAmount = {
-                                Value: parseFloat(item.manualDiscountAmount).toFixed(2)
-                            };
-
-                            entity.dyna_Status = {
-                                Value: parseInt(item.dyna_Status)
-                            };
-
-                            $.ajax({
-                                type: "POST",
-                                contentType: "application/json; charset=utf-8",
-                                datatype: "json",
-                                url: serverUrl + "/XRMServices/2011/OrganizationData.svc/OpportunityProductSet",
-                                data: JSON.stringify(entity),
-                                beforeSend: function (XMLHttpRequest) {
-                                    XMLHttpRequest.setRequestHeader("Accept", "application/json");
-                                },
-                                async: true,
-                                success: function (data, textStatus, xhr) {
-                                    var result = data.d;
-                                    var newEntityId = result.OpportunityProductId;
-
-                                    //var ddl = $("#opportunityProductDrop").data("kendoDropDownList");
-                                    //ddl.value(-1);
-                                    isDefaultValueAdded = false;
-                                    options.success(item);
-                                    var grid = $("#grid").data("kendoGrid").dataSource;
-                                    grid.read();
-
-                                    var sum = 0;
-                                    for (var i = 0; i < grid.data().length; i++) {
-                                        sum += grid.data()[i].extendedAmount;
+                                        var sum = 0;
+                                        for (var i = 0; i < grid.data().length; i++) {
+                                            sum += grid.data()[i].extendedAmount;
+                                        }
+                                        window.parent.Xrm.Page.getAttribute("totalamount").setValue(sum);
+                                    },
+                                    error: function (xhr, textStatus, errorThrown) {
+                                        //Xrm.Utility.alertDialog(textStatus + " " + errorThrown);
+                                        $("#grid").data("kendoGrid").dataSource.read();
                                     }
-                                    window.parent.Xrm.Page.getAttribute("totalamount").setValue(sum);
-                                },
-                                error: function (xhr, textStatus, errorThrown) {
-                                    //Xrm.Utility.alertDialog(textStatus + " " + errorThrown);
-                                    $("#grid").data("kendoGrid").dataSource.read();
-                                }
-                            });
+                                });
 
+                            },
+                            parameterMap: function (options, operation) {
+                                if (operation !== "read" && options.models) {
+                                    return { models: kendo.stringify(options.models) };
+                                }
+                            }
                         },
-                        parameterMap: function (options, operation) {
-                            if (operation !== "read" && options.models) {
-                                return { models: kendo.stringify(options.models) };
+                        batch: false,
+                        pageSize: 20,
+                        schema: {
+                            model: {
+                                id: "opportunityProductId",
+                                fields: {
+                                    isProductOverridden: { type: "boolean", editable: true, nullable: true },
+                                    isPriceOverridden: { type: "string", editable: true, nullable: true },
+                                    isPriceOverriddenValue: { type: "string", nullable: true },
+                                    currency: { type: "string", editable: false },
+                                    productId: { type: "string" },
+                                    uoMId: { type: "string" },
+                                    productIdName: { editable: true, type: "string" },
+                                    description: { editable: true, type: "string" },
+                                    pricePerUnit: { editable: true, type: "number", validation: { min: 1 } },
+                                    quantity: { type: "number", validation: { min: 1, required: true } },
+                                    manualDiscountAmount: { type: "number", validation: { required: true, min: 0 } },
+                                    manualDiscountProcentage: { type: "number", validation: { required: false, min: 0 } },
+                                    extendedAmount: { type: "number", editable: false, validation: { required: true, min: 1 } },
+                                    dyna_CustomerPrice: { type: "number", editable: false, validation: { required: true, min: 1 } },
+                                    dyna_StatusName: { type: "string", editable: true },
+                                    dyna_Status: { type: "string" },
+                                    dyna_ExpectedDeliveryDate: { type: "date", editable: true }
+                                }
                             }
                         }
-                    },
-                    batch: false,
-                    pageSize: 20,
-                    schema: {
-                        model: {
-                            id: "opportunityProductId",
-                            fields: {
-                                isProductOverridden: { type: "boolean", editable: true, nullable: true },
-                                isPriceOverridden: { type: "boolean", editable: true, nullable: true },
-                                currency: { type: "string", editable: false },
-                                productId: { type: "string" },
-                                uoMId: { type: "string" },
-                                productIdName: { editable: true, type: "string" },
-                                description: { editable: true, type: "string" },
-                                pricePerUnit: { editable: true, type: "number", validation: { min: 1 } },
-                                quantity: { type: "number", validation: { min: 1, required: true } },
-                                manualDiscountAmount: { type: "number", validation: { required: true, min: 0 } },
-                                manualDiscountProcentage: { type: "number", validation: { required: false, min: 0 } },
-                                extendedAmount: { type: "number", editable: false, validation: { required: true, min: 1 } },
-                                dyna_CustomerPrice: { type: "number", editable: false, validation: { required: true, min: 1 } },
-                                dyna_StatusName: { type: "string", editable: true },
-                                dyna_Status: { type: "string" },
-                                dyna_ExpectedDeliveryDate: { type: "date", editable: true }
-                            }
-                        }
-                    }
-                });
+                    });
+                }
+                else {
+                    $("#noData").show();
+                }
 
 
 
@@ -459,19 +475,33 @@
 
                         if (e.model.isNew()) {
                             // Disable the editor of the "id" column when editing data items
-
+                            var priceName = "Yes";
 
                             if (!productState || !e.model.isProductOverridden) {
-                                e.model.set("isPriceOverridden", false);
+                                //e.model.set("isPriceOverriddenValue", "1");
+                                //e.model.set("isPriceOverridden", "No");
                                 $("input[name=description]").parent().html("");
                             }
                             else if (productState || e.model.isProductOverridden) {
-                                e.model.set("isPriceOverridden", true);
+                                //e.model.set("isPriceOverriddenValue", "2");
+                                //e.model.set("isPriceOverridden", "Yes");
                                 $("input[aria-owns=productDrop_listbox]").parent().html("");
 
                             }
 
-                            if (!e.model.isPriceOverridden) { //($(".k-grid-edit-row td span:eq(1)")[0].innerText == "No" || $(".k-grid-edit-row td span:eq(1)")[0].innerText == "") {
+                            if (!priceOverriddenIsChanged) {
+                                if (!productState || !e.model.isProductOverridden) {
+                                    e.model.set("isPriceOverriddenValue", "1");
+                                    e.model.set("isPriceOverridden", "No");
+                                }
+                                else if (productState || e.model.isProductOverridden) {
+                                    e.model.set("isPriceOverriddenValue", "2");
+                                    e.model.set("isPriceOverridden", "Yes");
+
+                                }
+                            }
+
+                            if (e.model.isPriceOverriddenValue == "1") { //($(".k-grid-edit-row td span:eq(1)")[0].innerText == "No" || $(".k-grid-edit-row td span:eq(1)")[0].innerText == "") {
                                 if (e.sender._lastCellIndex == 3) {
                                     this.closeCell();
                                 }
@@ -484,7 +514,8 @@
                                 e.model.set("dyna_StatusName", "Open");
                                 isDefaultValueAdded = true;
                                 e.model.set("isProductOverridden", productState);
-                                e.model.set("isPriceOverridden", productState);
+                                //e.model.set("isPriceOverriddenValue", productState ? "2" : "1");
+                                //e.model.set("isPriceOverridden", productState ? "Yes" : "No");
                             }
                         }
                         else if (!e.model.isNew()) {
@@ -497,7 +528,8 @@
                         }
                     },
                     columns: [
-                       /*0*/ { field: "isPriceOverridden", editor: customBoolEditor, template: '<span>#= isPriceOverridden ? "Yes" : "No"#</span>', title: "Price Overriden", width: 50 },
+                       /*0*/ //{ field: "isPriceOverridden", editor: customBoolEditor, template: '<span>#= isPriceOverridden ? "Yes" : "No"#</span>', title: "Price Overriden", width: 50 },
+                       /*0*/ { field: "isPriceOverridden", editor: customDropDownisPriceOverridden, title: "Price Overriden", width: 50 },
                        /*1*/ { field: "productIdName", title: "Existing Product", template: '#=productIdName == null ? "" : productIdName#', editor: customBoolDropDrown, width: 120 },
                        /*2*/ { field: "description", title: "Write-In Product", width: 120 },
                              //{ field: "currency", title: "-", width: 50 },
@@ -689,12 +721,14 @@
                 $('<input onchange="EnableSellingPrice(this);" class="" id="' + guid + '" type="checkbox" name="isPriceOverridden" data-type="boolean" data-bind="checked:isPriceOverridden">').appendTo(container);
             }
 
+            var priceOverriddenIsChanged = false;
             function EnableSellingPrice(e) {
 
                 var grid = $("#grid").data("kendoGrid").dataItem($(e).closest("tr"));
                 var element = $($("#grid").data("kendoGrid").current()[0]).closest("tr").attr("data-uid");
                 //grid.pricePerUnit = parseFloat(dataItem.amount).toFixed(2);
-                grid.IsPriceOverridden = e.checked ? true : false;
+                grid.IsPriceOverridden = e.checked ? "Yes" : "No";
+                priceOverriddenIsChanged = true;
 
                 //$("#grid").find("tr[data-uid='" + element + "'] td:eq(4)").text(parseFloat(dataItem.amount).toFixed(2));
                 //$("#grid").find("tr[data-uid='" + element + "'] td:eq(5)").text(grid.quantity);
@@ -704,6 +738,11 @@
                             { text: "Open", value: "1" },
                             { text: "Delivered", value: "2" },
                             { text: "Cancelled", value: "3" },
+            ];
+
+            var dataPriceOverriden = [
+                            { text: "No", value: "1" },
+                            { text: "Yes", value: "2" }
             ];
 
             function customDropDownStatus(container, options) {
@@ -717,6 +756,23 @@
                     },
                     index: 1,
                     dataSource: dataStatus,
+                });
+            }
+
+            function customDropDownisPriceOverridden(container, options) {
+
+                $('<input id="isPriceOverriddenValue" data-text-field="text" data-value-field="value" data-bind="value:isPriceOverriddenValue "/>').appendTo(container)
+                .kendoComboBox({
+                    dataTextField: "text",
+                    dataValueField: "value",
+                    change: function (e) {
+                        options.model["isPriceOverridden"] = e.sender.text();
+                        options.model["isPriceOverriddenValue"] = e.sender.value();
+
+                        EnableSellingPrice(e.sender.wrapper[0]);
+                    },
+                    index: 1,
+                    dataSource: dataPriceOverriden,
                 });
             }
 
@@ -791,7 +847,7 @@
             var productOdataUrl = Xrm.Page.context.getClientUrl() + "/XRMServices/2011/OrganizationData.svc/ProductPriceLevelSet?$select=UoMId,UoMScheduleId,Amount,PriceLevelId,ProductId,product_price_levels/Name,product_price_levels/ProductId&$expand=product_price_levels&$filter=PriceLevelId/Id eq (guid'" + priceLevelId + "')&$orderby=ProductId asc";
             var resultPro = [];
             var DatasourceProduct = function () {
-                
+
                 $.ajax({
                     type: "GET",
                     contentType: "application/json; charset=utf-8",
@@ -802,7 +858,7 @@
                     },
                     success: function (data, textStatus, xhr) {
                         var results = data.d.results;
-                        
+
 
                         for (var i = 0; i < results.length; i++) {
                             var amount = results[i].Amount;
@@ -830,7 +886,9 @@
                 })
             }
 
-            DatasourceProduct();
+            if (priceLevelId != "") {
+                DatasourceProduct();
+            }
 
 
             function onChangeProduct(e) {
@@ -877,6 +935,10 @@
                 }
 
                 return label;
+            }
+
+            function SetPriceLabel(val) {
+                return val ? "Yes" : "No";
             }
 
             function GetCrmContext() {

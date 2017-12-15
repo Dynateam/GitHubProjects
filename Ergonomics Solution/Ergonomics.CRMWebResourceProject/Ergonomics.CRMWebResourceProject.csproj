@@ -68,6 +68,7 @@
     <Content Include="scripts\kendo.aspnetmvc.min.js" />
     <Content Include="scripts\kendo.color.min.js" />
     <Content Include="scripts\kendo.grid.min.js" />
+    <Content Include="scripts\Opportunity_JScript.js" />
     <Content Include="scripts\productTest.js" />
     <Content Include="Web.config" />
   </ItemGroup>
