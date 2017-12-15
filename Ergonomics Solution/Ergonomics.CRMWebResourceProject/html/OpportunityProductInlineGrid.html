@@ -71,6 +71,14 @@
         .k-grid td {
             padding: .5rem;
         }
+
+        .k-select {
+            /*background-image: url('/WebResources/dyna_/images/arrow.png');
+            background-repeat: no-repeat;
+            margin-top:10px;*/
+            width: 30px;
+            top: -10px;
+        }
     </style>
 
     <script>
@@ -105,7 +113,7 @@
         <div id="noData" style="display:none; background: rgba(0, 0, 0, 0.5); border-image: none; width: 100%; height: 310px; text-align: center; font-size: 2em; margin-top: -300px; position: absolute;">
             <div style="background: rgb(255, 255, 255); margin: 90px auto auto; padding: 30px; border: 2px solid rgb(0, 0, 0); border-image: none; width: 10%; text-align: center;">
                 No data...
-                
+
             </div>
         </div>
 
@@ -762,7 +770,7 @@
             function customDropDownisPriceOverridden(container, options) {
 
                 $('<input id="isPriceOverriddenValue" data-text-field="text" data-value-field="value" data-bind="value:isPriceOverriddenValue "/>').appendTo(container)
-                .kendoComboBox({
+                .kendoDropDownList({
                     dataTextField: "text",
                     dataValueField: "value",
                     change: function (e) {
@@ -799,44 +807,6 @@
                         //serverFiltering: true,
                         transport: {
                             read: function (option) {
-                                //$.ajax({
-                                //    type: "GET",
-                                //    contentType: "application/json; charset=utf-8",
-                                //    datatype: "json",
-                                //    url: Xrm.Page.context.getClientUrl() + "/XRMServices/2011/OrganizationData.svc/ProductPriceLevelSet?$select=UoMId,UoMScheduleId,Amount,PriceLevelId,ProductId,product_price_levels/Name,product_price_levels/ProductId&$expand=product_price_levels&$filter=PriceLevelId/Id eq (guid'" + priceLevelId + "')&$orderby=ProductId asc",
-                                //    beforeSend: function (XMLHttpRequest) {
-                                //        XMLHttpRequest.setRequestHeader("Accept", "application/json");
-                                //    },
-                                //    success: function (data, textStatus, xhr) {
-                                //        var results = data.d.results;
-                                //        var resultPro = [];
-
-                                //        for (var i = 0; i < results.length; i++) {
-                                //            var amount = results[i].Amount;
-                                //            var priceLevelId = results[i].PriceLevelId;
-                                //            var productId = results[i].ProductId;
-                                //            var uoMId = results[i].UoMId;
-                                //            var uoMScheduleId = results[i].UoMScheduleId;
-                                //            var product_price_levels_Name = results[i].product_price_levels.Name;
-                                //            var product_price_levels_ProductId = results[i].product_price_levels.ProductId;
-
-                                //            var resultItem = {};
-                                //            resultItem.uoMId = uoMId != null ? uoMId.Id : "";
-                                //            resultItem.uoMScheduleId = uoMScheduleId;
-                                //            resultItem.productIdName = productId.Name;
-                                //            resultItem.productId = productId.Id;
-                                //            resultItem.amount = amount.Value;
-                                //            resultPro.push(resultItem);
-                                //        }
-
-                                //        option.success(resultPro);
-
-                                //    },
-                                //    error: function (xhr, textStatus, errorThrown) {
-                                //        Xrm.Utility.alertDialog(textStatus + " " + errorThrown);
-                                //    }
-                                //});
-
                                 option.success(resultPro);
                             }
                         }
