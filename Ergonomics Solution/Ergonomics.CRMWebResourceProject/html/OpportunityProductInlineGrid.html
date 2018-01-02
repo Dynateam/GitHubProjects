@@ -271,7 +271,7 @@
                                     Id: item.opportunityId,
                                     LogicalName: "opportunity"
                                 };
-                                entity.IsPriceOverridden = item.IsPriceOverriddenValue == "2" ? true : false;
+                                entity.IsPriceOverridden = item.isPriceOverriddenValue == "2" ? true : false;
                                 entity.PricePerUnit = {
                                     Value: parseFloat(item.pricePerUnit).toFixed(2)
                                 };
@@ -735,7 +735,8 @@
                 var grid = $("#grid").data("kendoGrid").dataItem($(e).closest("tr"));
                 var element = $($("#grid").data("kendoGrid").current()[0]).closest("tr").attr("data-uid");
                 //grid.pricePerUnit = parseFloat(dataItem.amount).toFixed(2);
-                grid.IsPriceOverridden = e.checked ? "Yes" : "No";
+                //grid.isPriceOverridden = grid ? "Yes" : "No";
+                //grid.isPriceOverriddenValue = e.checked ? "Yes" : "No";
                 priceOverriddenIsChanged = true;
 
                 //$("#grid").find("tr[data-uid='" + element + "'] td:eq(4)").text(parseFloat(dataItem.amount).toFixed(2));
